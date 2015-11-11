@@ -85,50 +85,79 @@ void readImageProperties(FILE *img, unsigned *imgHeight, unsigned *imgWidth,
 	/**Read \n*/
 	fscanf_s(img, "%c", readedLine, 1);
 
-	fscanf_s(img, "%c", readedLine, 1);
+	//fscanf_s(img, "%c", readedLine, 1);
 	propertiesLength = ftell(img);
 
 }
 
+struct rgbPixel *readImage(FILE *img, unsigned *imgHeight, unsigned *imgWidth,
+	unsigned *maxColorValue)
+{
+	unsigned i, j;
+	readImageProperties(img, imgHeight, imgWidth, maxColorValue);
+
+
+	struct rgbPixel *image = malloc(*imgHeight * *imgWidth * sizeof(struct rgbPixel));
+	if (image == NULL) {
+		perror("Malloc error");
+	}
+
+	fseek(img, propertiesLength, SEEK_SET);
+
+	fread(image, sizeof(struct rgbPixel), *imgHeight * *imgWidth, img);
+	return image;
+}
+
+
 /**Converts from rgb to YCbCr
 Values are returned through variables Y, Cb and Cr */
-struct YCbCrPixel *rgbToYCbCr(struct rgbPixel *rgbBlock) {
+void rgbToYCbCr(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct YCbCrPixel *yCbCrImage) {
 	int i, j;
-	struct YCbCrPixel *yCbCrBlock =
-		malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct YCbCrPixel));
+	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
+	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
+
+	//struct YCbCrPixel *yCbCrBlock =
+		//malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct YCbCrPixel));
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
 		for (j = 0; j < BLOCK_WIDTH; j++) {
-			yCbCrBlock[i * BLOCK_WIDTH + j].Y = 0.299 * rgbBlock[i * BLOCK_WIDTH + j].R +
-				0.587 * rgbBlock[i * BLOCK_WIDTH + j].G + 0.114 * rgbBlock[i * BLOCK_WIDTH + j].B;
-			yCbCrBlock[i * BLOCK_WIDTH + j].Cb = -0.1687 * rgbBlock[i * BLOCK_WIDTH + j].R -
-				0.3313 * rgbBlock[i * BLOCK_WIDTH + j].G + 0.5 * rgbBlock[i * BLOCK_WIDTH + j].B + 128;
-			yCbCrBlock[i * BLOCK_WIDTH + j].Cr = 0.5 * rgbBlock[i * BLOCK_WIDTH + j].R -
-				0.4187 * rgbBlock[i * BLOCK_WIDTH + j].G - 0.0813 * rgbBlock[i * BLOCK_WIDTH + j].B + 128;
+			unsigned index = (i + rowOffset) * imgWidth + j + columnOffset;
+
+			yCbCrImage[index].Y = 0.299 * rgbImage[index].R +
+				0.587 * rgbImage[index].G + 0.114 * rgbImage[index].B;
+			yCbCrImage[index].Cb = -0.1687 * rgbImage[index].R -
+				0.3313 * rgbImage[index].G + 0.5 * rgbImage[index].B + 128;
+			yCbCrImage[index].Cr = 0.5 * rgbImage[index].R -
+				0.4187 * rgbImage[index].G - 0.0813 * rgbImage[index].B + 128;
 		}
 	}
-	return yCbCrBlock;
 }
 
 /**Converts from rgb to YCbCr
 Values are returned through variables Y, Cb and Cr */
-struct rgbPixel *YCbCrToRgb(struct YCbCrPixel *yCbCrBlock) {
+void YCbCrToRgb(struct YCbCrPixel *yCbCrImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct rgbPixel *rgbImage) {
 	int i, j;
-	struct rgbPixel *rgbBlock =
-		malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct rgbPixel));
+	//struct rgbPixel *rgbBlock =
+	//	malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct rgbPixel));
+
+	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
+	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
+
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
 		for (j = 0; j < BLOCK_WIDTH; j++) {
-			rgbBlock[i * BLOCK_WIDTH + j].R = 0.299 * yCbCrBlock[i * BLOCK_WIDTH + j].Y +
-				1.402 * (yCbCrBlock[i * BLOCK_WIDTH + j].Cr - 128);
+			unsigned index = (i + rowOffset) * imgWidth + j + columnOffset;
 
-			rgbBlock[i * BLOCK_WIDTH + j].G = yCbCrBlock[i * BLOCK_WIDTH + j].Y -
-				0.34414 * (yCbCrBlock[i * BLOCK_WIDTH + j].Cb - 128) 
-				- 0.71414 * (yCbCrBlock[i * BLOCK_WIDTH + j].Cr - 128);
+			rgbImage[index].R = 0.299 * yCbCrImage[index].Y +
+				1.402 * (yCbCrImage[index].Cr - 128);
 
-			rgbBlock[i * BLOCK_WIDTH + j].B = yCbCrBlock[i * BLOCK_WIDTH + j].Y -
-				1.772 * (yCbCrBlock[i * BLOCK_WIDTH + j].Cb - 128);
+			//rgbImage[index].R = 1;
+			rgbImage[index].G = yCbCrImage[index].Y -
+				0.34414 * (yCbCrImage[index].Cb - 128)
+				- 0.71414 * (yCbCrImage[index].Cr - 128);
+
+			rgbImage[index].B = yCbCrImage[index].Y -
+				1.772 * (yCbCrImage[index].Cb - 128);
 		}
 	}
-	return rgbBlock;
 }
 
 
@@ -160,12 +189,18 @@ void saveHeaderOfppm(char* fileName, unsigned imgHeight, unsigned imgWidth,
 	FILE *output;
 
 	/**Open an output file*/
-	if (fopen_s(&output, fileName, "w") != 0) {
+	if (fopen_s(&output, fileName, "wb") != 0) {
 		printf("Error while opening output file.");
 		exit(-2);
 	}
 
 	fprintf(output, "P6\n%d %d\n%d\n", imgWidth, imgHeight, maxColorValue);
+	//fprintf(output, "P6");
+	//fwrite(0x0a, sizeof(char), 1, output);
+	//fprintf(output, "%d %d", imgWidth, imgHeight);
+	//fwrite(0x0a, sizeof(char), 1, output);
+	//fprintf(output, "%d", maxColorValue);
+	//fwrite(0x0a, sizeof(char), 1, output);
 	fclose(output);
 }
 
@@ -176,13 +211,12 @@ void saveImgAsppm(char* fileName, struct rgbPixel *blocks, unsigned imgWidth, un
 	FILE *output;
 
 	/**Open an output file*/
-	if (fopen_s(&output, fileName, "w") != 0) {
+	if (fopen_s(&output, fileName, "wb") != 0) {
 		printf("Error while opening output file.");
 		exit(-2);
 	}
 
 	fprintf(output, "P6\n%d %d\n%d\n", imgWidth, imgHeight, maxColorValue);
-
 
 	for (i = 0; i < imgHeight; ++i) {
 		for (j = 0; j < imgWidth; ++j) {
@@ -226,6 +260,9 @@ void saveBlocksToppm(char* fileName, struct rgbPixel **blocks, unsigned imageWid
 	fclose(output);
 }
 
+
+
+
 /**Input arguments
 ** 1. -> image name
 */
@@ -235,9 +272,10 @@ int main(int argc, char *argv[]) {
 		maxColorValue, rowOffset, columnOffset, BLOCK_NUM, i, j, k;
 	FILE *img = NULL;
 	struct rgbPixel *rgbBlock, *rgbImage;
-	struct YCbCrPixel *yCbCrBlock;
+	struct YCbCrPixel *yCbCrImage;
 	struct rgbPixel *convertedRgbBlock;
 	struct rgbPixel **rgbBlocks, **original;
+	struct rgbPixel *image;
 
 	/**Check if 3 arguments are entered*/
 	if (argc != 2) {
@@ -258,67 +296,34 @@ int main(int argc, char *argv[]) {
 		return -2;
 	}
 
-	/**Read properties*/
-	readImageProperties(img, &imgHeight, &imgWidth, &maxColorValue);
+	image = readImage(img, &imgHeight, &imgWidth, &maxColorValue);
+	///**Read properties*/
+	//readImageProperties(img, &imgHeight, &imgWidth, &maxColorValue);
 
 	BLOCK_NUM = (imgWidth / BLOCK_WIDTH) * (imgHeight / BLOCK_HEIGHT);
 
 	rgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
-	//saveHeaderOfppm("out.ppm", imgHeight, imgWidth, maxColorValue);
-	//saveHeaderOfppm("out_original.ppm", imgHeight, imgWidth, maxColorValue);
-	//rgbBlocks = malloc(imgWidth / BLOCK_WIDTH * sizeof(struct rgbPixel *));
-	original = malloc(imgWidth / BLOCK_WIDTH * sizeof(struct rgbPixel *));
+	yCbCrImage = malloc(imgWidth * imgHeight * sizeof(struct YCbCrPixel));
+
 	for (i = 0; i < BLOCK_NUM; ++i) {
-		/**Find block to read*/
-		rowOffset = i / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
-		columnOffset = (i % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
-		//printf("Row: %d, column: %d, imgWidth: %d.\n", rowOffset, columnOffset, imgWidth);
-
-		/**Read defined block*/
-		rgbBlock = malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct rgbPixel));
-		readBlock(img, rowOffset, columnOffset, imgWidth, rgbBlock);
-
-
 		/**Convert from RGB to YCbCr*/
-		yCbCrBlock = rgbToYCbCr(rgbBlock);
-		convertedRgbBlock = YCbCrToRgb(yCbCrBlock);
-		//rgbBlocks[i % (imgWidth / BLOCK_WIDTH)] = convertedRgbBlock;
-		//original[i % (imgWidth / BLOCK_WIDTH)] = rgbBlock;
-		//printf("rgbBlock\n");
-		for (j = 0; j < BLOCK_HEIGHT; ++j) {
-			for (k = 0; k < BLOCK_WIDTH; ++k) {
-				unsigned index = (rowOffset + j)* imgWidth + columnOffset + k;
-				rgbImage[index].R = rgbBlock[j * BLOCK_WIDTH + k].R;
-				rgbImage[index].G = rgbBlock[j * BLOCK_WIDTH + k].G;
-				rgbImage[index].B = rgbBlock[j * BLOCK_WIDTH + k].B;
-				//printf("%0x %0x %0x", rgbBlock[j * BLOCK_WIDTH + k].R, rgbBlock[j * BLOCK_WIDTH + k].G, rgbBlock[j * BLOCK_WIDTH + k].B);
-			}
-			//printf("\n");
-		}
-		printSomething("rgbBlock", rgbBlock, 8,8);
-		//free(rgbBlock);
-
-		if (i != 0 && i % (imgWidth / BLOCK_WIDTH) == 0) {
-			/**Save*/
-			//saveBlocksToppm("out.ppm", rgbBlocks, imgWidth);
-			//SPREMAJ CIJELU SLIKU U POLJE, A ZATIM POLJE U DATOTEKU
-
-			//for (i = 0; i < BLOCK_HEIGHT; ++i) {
-			//	for (j = 0; j < imgWidth / BLOCK_WIDTH; ++j) {//do broja blokova u retku
-			//		free(rgbBlocks[j][0]);
-			//		free(rgbBlocks[j]);
-			//	}
-			//}
-			//free(rgbBlocks);
-		}
+		rgbToYCbCr(img, imgHeight, imgWidth, i, yCbCrImage);
+		YCbCrToRgb(yCbCrImage, imgHeight, imgWidth, i, rgbImage);
 	}
 
-	printSomething("rgbImage", rgbImage, imgHeight, imgWidth);
+	//printSomething("rgbImage", image, imgHeight, imgWidth);
 
-	saveImgAsppm("out_original.ppm", rgbImage, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_original.ppm", image, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_rgb.ppm", rgbImage, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_yCbCr.ppm", yCbCrImage, imgWidth, imgHeight, maxColorValue);
+
 	clock_t end = clock();
-
 	printf("%f\n", (float)(end - start) / CLOCKS_PER_SEC);
+
+	/* Free alocated space */
+	free(image);
+	free(rgbImage);
+	free(yCbCrImage);
 	/**Close image file it's not needed*/
 	fclose(img);
 	return 0;
