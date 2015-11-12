@@ -19,11 +19,11 @@ struct rgbPixel
 	uint8_t B;
 };
 
-struct YCbCrPixel
+struct yuvPixel
 {
 	float Y;
-	float Cb;
-	float Cr;
+	float U;
+	float V;
 };
 
 
@@ -109,33 +109,37 @@ struct rgbPixel *readImage(FILE *img, unsigned *imgHeight, unsigned *imgWidth,
 }
 
 
-/**Converts from rgb to YCbCr
+/**Converts from rgb to yuv
 Values are returned through variables Y, Cb and Cr */
-void rgbToYCbCr(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct YCbCrPixel *yCbCrImage) {
+void rgbToyuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct yuvPixel *yuvImage) {
 	int i, j;
 	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
 	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
-
-	//struct YCbCrPixel *yCbCrBlock =
-		//malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct YCbCrPixel));
+	unsigned index;
+	//struct yuvPixel *yuvBlock =
+		//malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct yuvPixel));
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
 		for (j = 0; j < BLOCK_WIDTH; j++) {
-			unsigned index = (i + rowOffset) * imgWidth + j + columnOffset;
+			index = (i + rowOffset) * imgWidth + j + columnOffset;
 
-			yCbCrImage[index].Y = 0.299 * rgbImage[index].R +
-				0.587 * rgbImage[index].G + 0.114 * rgbImage[index].B;
-			yCbCrImage[index].Cb = -0.1687 * rgbImage[index].R -
-				0.3313 * rgbImage[index].G + 0.5 * rgbImage[index].B + 128;
-			yCbCrImage[index].Cr = 0.5 * rgbImage[index].R -
-				0.4187 * rgbImage[index].G - 0.0813 * rgbImage[index].B + 128;
+			if (index < 0 || index > imgHeight*imgWidth)
+				continue;
+
+			yuvImage[index].Y = 0.257 * rgbImage[index].R +
+				0.504 * rgbImage[index].G + 0.098 * rgbImage[index].B + 16;
+			yuvImage[index].U = -0.148 * rgbImage[index].R -
+				0.291 * rgbImage[index].G + 0.439 * rgbImage[index].B + 128;
+			yuvImage[index].V = 0.439 * rgbImage[index].R -
+				0.368 * rgbImage[index].G - 0.071 * rgbImage[index].B + 128;
 		}
 	}
 }
 
-/**Converts from rgb to YCbCr
+/**Converts from rgb to yuv
 Values are returned through variables Y, Cb and Cr */
-void YCbCrToRgb(struct YCbCrPixel *yCbCrImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct rgbPixel *rgbImage) {
+void yuvToRgb(struct yuvPixel *yuvImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct rgbPixel *rgbImage) {
 	int i, j;
+	unsigned index;
 	//struct rgbPixel *rgbBlock =
 	//	malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct rgbPixel));
 
@@ -144,18 +148,20 @@ void YCbCrToRgb(struct YCbCrPixel *yCbCrImage, unsigned imgHeight, unsigned imgW
 
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
 		for (j = 0; j < BLOCK_WIDTH; j++) {
-			unsigned index = (i + rowOffset) * imgWidth + j + columnOffset;
+			index = (i + rowOffset) * imgWidth + j + columnOffset;
 
-			rgbImage[index].R = 0.299 * yCbCrImage[index].Y +
-				1.402 * (yCbCrImage[index].Cr - 128);
+			if (index < 0 || index > imgHeight*imgWidth)
+				continue;
+			rgbImage[index].R = 1.164 * (yuvImage[index].Y - 16) +
+				1.596 * (yuvImage[index].V - 128);
 
 			//rgbImage[index].R = 1;
-			rgbImage[index].G = yCbCrImage[index].Y -
-				0.34414 * (yCbCrImage[index].Cb - 128)
-				- 0.71414 * (yCbCrImage[index].Cr - 128);
+			rgbImage[index].G = 1.164 * (yuvImage[index].Y - 16) -
+				0.813 * (yuvImage[index].V - 128)
+				- 0.391 * (yuvImage[index].U - 128);
 
-			rgbImage[index].B = yCbCrImage[index].Y -
-				1.772 * (yCbCrImage[index].Cb - 128);
+			rgbImage[index].B = 1.164 * (yuvImage[index].Y - 16) +
+				2.018 * (yuvImage[index].U - 128);
 		}
 	}
 }
@@ -272,7 +278,7 @@ int main(int argc, char *argv[]) {
 		maxColorValue, rowOffset, columnOffset, BLOCK_NUM, i, j, k;
 	FILE *img = NULL;
 	struct rgbPixel *rgbBlock, *rgbImage;
-	struct YCbCrPixel *yCbCrImage;
+	struct yuvPixel *yuvImage;
 	struct rgbPixel *convertedRgbBlock;
 	struct rgbPixel **rgbBlocks, **original;
 	struct rgbPixel *image;
@@ -303,19 +309,19 @@ int main(int argc, char *argv[]) {
 	BLOCK_NUM = (imgWidth / BLOCK_WIDTH) * (imgHeight / BLOCK_HEIGHT);
 
 	rgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
-	yCbCrImage = malloc(imgWidth * imgHeight * sizeof(struct YCbCrPixel));
+	yuvImage = malloc(imgWidth * imgHeight * sizeof(struct yuvPixel));
 
 	for (i = 0; i < BLOCK_NUM; ++i) {
-		/**Convert from RGB to YCbCr*/
-		rgbToYCbCr(img, imgHeight, imgWidth, i, yCbCrImage);
-		YCbCrToRgb(yCbCrImage, imgHeight, imgWidth, i, rgbImage);
+		/**Convert from RGB to yuv*/
+		rgbToyuv(img, imgHeight, imgWidth, i, yuvImage);
+		yuvToRgb(yuvImage, imgHeight, imgWidth, i, rgbImage);
 	}
 
 	//printSomething("rgbImage", image, imgHeight, imgWidth);
 
 	saveImgAsppm("out_original.ppm", image, imgWidth, imgHeight, maxColorValue);
 	saveImgAsppm("out_rgb.ppm", rgbImage, imgWidth, imgHeight, maxColorValue);
-	saveImgAsppm("out_yCbCr.ppm", yCbCrImage, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_yuv.ppm", yuvImage, imgWidth, imgHeight, maxColorValue);
 
 	clock_t end = clock();
 	printf("%f\n", (float)(end - start) / CLOCKS_PER_SEC);
@@ -323,7 +329,7 @@ int main(int argc, char *argv[]) {
 	/* Free alocated space */
 	free(image);
 	free(rgbImage);
-	free(yCbCrImage);
+	free(yuvImage);
 	/**Close image file it's not needed*/
 	fclose(img);
 	return 0;
