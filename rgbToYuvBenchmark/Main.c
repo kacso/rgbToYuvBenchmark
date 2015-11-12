@@ -116,8 +116,7 @@ void rgbToyuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, 
 	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
 	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
 	unsigned index;
-	//struct yuvPixel *yuvBlock =
-		//malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct yuvPixel));
+
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
 		for (j = 0; j < BLOCK_WIDTH; j++) {
 			index = (i + rowOffset) * imgWidth + j + columnOffset;
@@ -140,8 +139,6 @@ Values are returned through variables Y, Cb and Cr */
 void yuvToRgb(struct yuvPixel *yuvImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct rgbPixel *rgbImage) {
 	int i, j;
 	unsigned index;
-	//struct rgbPixel *rgbBlock =
-	//	malloc(BLOCK_HEIGHT * BLOCK_WIDTH * sizeof(struct rgbPixel));
 
 	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
 	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
@@ -313,7 +310,7 @@ int main(int argc, char *argv[]) {
 
 	for (i = 0; i < BLOCK_NUM; ++i) {
 		/**Convert from RGB to yuv*/
-		rgbToyuv(img, imgHeight, imgWidth, i, yuvImage);
+		rgbToyuv(image, imgHeight, imgWidth, i, yuvImage);
 		yuvToRgb(yuvImage, imgHeight, imgWidth, i, rgbImage);
 	}
 
