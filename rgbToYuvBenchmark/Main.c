@@ -111,7 +111,7 @@ struct rgbPixel *readImage(FILE *img, unsigned *imgHeight, unsigned *imgWidth,
 
 /**Converts from rgb to yuv
 Values are returned through variables Y, Cb and Cr */
-void rgbToyuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct yuvPixel *yuvImage) {
+void standardRgbToYuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct yuvPixel *yuvImage) {
 	int i, j;
 	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
 	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
@@ -130,6 +130,53 @@ void rgbToyuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, 
 				0.291 * rgbImage[index].G + 0.439 * rgbImage[index].B + 128;
 			yuvImage[index].V = 0.439 * rgbImage[index].R -
 				0.368 * rgbImage[index].G - 0.071 * rgbImage[index].B + 128;
+		}
+	}
+}
+
+void shiftRgbToYuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct yuvPixel *yuvImage) {
+	int i, j;
+	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
+	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
+	unsigned index;
+
+	for (i = 0; i < BLOCK_HEIGHT; i++) {
+		for (j = 0; j < BLOCK_WIDTH; j++) {
+			index = (i + rowOffset) * imgWidth + j + columnOffset;
+
+			if (index < 0 || index > imgHeight*imgWidth)
+				continue;
+
+			yuvImage[index].Y = ((66 * rgbImage[index].R +
+				129 * rgbImage[index].G + 25 * rgbImage[index].B  + 128) >> 8) + 16;
+			yuvImage[index].U = ((-38 * rgbImage[index].R -
+				74 * rgbImage[index].G + 112 * rgbImage[index].B + 128) >> 8) + 128;
+			yuvImage[index].V = ((112 * rgbImage[index].R -
+				94 * rgbImage[index].G - 18 * rgbImage[index].B + 128) >> 8) + 128;
+		}
+	}
+}
+
+
+void optimizedShiftRgbToYuv(struct rgbPixel *rgbImage, unsigned imgHeight, unsigned imgWidth, unsigned BLOCK_NUM, struct yuvPixel *yuvImage) {
+	int i, j;
+	unsigned rowOffset = BLOCK_NUM / (imgWidth / BLOCK_WIDTH) * BLOCK_HEIGHT;
+	unsigned columnOffset = (BLOCK_NUM % (imgWidth / BLOCK_WIDTH))  * BLOCK_WIDTH;
+	unsigned index;
+
+	for (i = 0; i < BLOCK_HEIGHT; i++) {
+		for (j = 0; j < BLOCK_WIDTH; j++) {
+			index = (i + rowOffset) * imgWidth + j + columnOffset;
+
+			if (index < 0 || index > imgHeight*imgWidth)
+				continue;
+
+			yuvImage[index].Y = ((66 * rgbImage[index].R +
+				4 * 32 * rgbImage[index].G + 25 * rgbImage[index].B + 128) >> 8) + 16;
+			yuvImage[index].U = ((-38 * rgbImage[index].R -
+				74 * rgbImage[index].G + 112 * rgbImage[index].B + 128) >> 8) + 128;
+			yuvImage[index].V = ((3 * 38 * rgbImage[index].R -
+				3 * 32 * rgbImage[index].G - 18 * rgbImage[index].B + 128) >> 8) + 128;
 		}
 	}
 }
@@ -274,11 +321,11 @@ int main(int argc, char *argv[]) {
 	unsigned int blockNum = 0, imgHeight, imgWidth,
 		maxColorValue, rowOffset, columnOffset, BLOCK_NUM, i, j, k;
 	FILE *img = NULL;
-	struct rgbPixel *rgbBlock, *rgbImage;
+	struct rgbPixel *standardRgbImage, *shiftRgbImage, *optimizedShiftRgbImage;
 	struct yuvPixel *yuvImage;
-	struct rgbPixel *convertedRgbBlock;
-	struct rgbPixel **rgbBlocks, **original;
+	struct rgbPixel **original;
 	struct rgbPixel *image;
+	float standardTime = 0, shiftTime = 0, optimizedShiftTime = 0;
 
 	/**Check if 3 arguments are entered*/
 	if (argc != 2) {
@@ -305,27 +352,53 @@ int main(int argc, char *argv[]) {
 
 	BLOCK_NUM = (imgWidth / BLOCK_WIDTH) * (imgHeight / BLOCK_HEIGHT);
 
-	rgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
+	standardRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
+	shiftRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
+	optimizedShiftRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
 	yuvImage = malloc(imgWidth * imgHeight * sizeof(struct yuvPixel));
 
+	clock_t sRgb2Yuv, eRgb2Yuv;
 	for (i = 0; i < BLOCK_NUM; ++i) {
-		/**Convert from RGB to yuv*/
-		rgbToyuv(image, imgHeight, imgWidth, i, yuvImage);
-		yuvToRgb(yuvImage, imgHeight, imgWidth, i, rgbImage);
+		/**Convert from RGB to yuv */
+		/* Standard */
+		sRgb2Yuv = clock();
+		standardRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
+		eRgb2Yuv = clock();
+		standardTime += eRgb2Yuv - sRgb2Yuv;
+		yuvToRgb(yuvImage, imgHeight, imgWidth, i, standardRgbImage);
+
+		/* Shift */
+		sRgb2Yuv = clock();
+		shiftRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
+		eRgb2Yuv = clock();
+		shiftTime += eRgb2Yuv - sRgb2Yuv;
+		yuvToRgb(yuvImage, imgHeight, imgWidth, i, shiftRgbImage);
+
+		/* Optimized Shift */
+		sRgb2Yuv = clock();
+		optimizedShiftRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
+		eRgb2Yuv = clock();
+		optimizedShiftTime += eRgb2Yuv - sRgb2Yuv;
+		yuvToRgb(yuvImage, imgHeight, imgWidth, i, optimizedShiftRgbImage);
 	}
 
 	//printSomething("rgbImage", image, imgHeight, imgWidth);
 
 	saveImgAsppm("out_original.ppm", image, imgWidth, imgHeight, maxColorValue);
-	saveImgAsppm("out_rgb.ppm", rgbImage, imgWidth, imgHeight, maxColorValue);
-	saveImgAsppm("out_yuv.ppm", yuvImage, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_standardRgb.ppm", standardRgbImage, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_shiftRgb.ppm", shiftRgbImage, imgWidth, imgHeight, maxColorValue);
+	saveImgAsppm("out_optimizedShiftRgb.ppm", optimizedShiftRgbImage, imgWidth, imgHeight, maxColorValue);
 
 	clock_t end = clock();
-	printf("%f\n", (float)(end - start) / CLOCKS_PER_SEC);
+	printf("Standard conversion: %f\n", standardTime / CLOCKS_PER_SEC);
+	printf("Shift conversion: %f\n", shiftTime / CLOCKS_PER_SEC);
+	printf("Optmized shift conversion: %f\n", optimizedShiftTime / CLOCKS_PER_SEC);
+	printf("Total time: %f\n", (float)(end - start) / CLOCKS_PER_SEC);
 
 	/* Free alocated space */
 	free(image);
-	free(rgbImage);
+	free(standardRgbImage);
+	free(shiftRgbImage);
 	free(yuvImage);
 	/**Close image file it's not needed*/
 	fclose(img);

@@ -1,4 +1,4 @@
-﻿Build started 12/11/2015 20:13:51.
+﻿Build started 20/11/2015 18:09:43.
      1>Project "D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\rgbToYuvBenchmark\rgbToYuvBenchmark.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TC /errorReport:prompt Main.c
@@ -8,19 +8,21 @@
      1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(128): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
      1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(130): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
      1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(132): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(153): warning C4244: '=': conversion from 'double' to 'uint8_t', possible loss of data
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(158): warning C4244: '=': conversion from 'double' to 'uint8_t', possible loss of data
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(161): warning C4244: '=': conversion from 'double' to 'uint8_t', possible loss of data
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(213): warning C4101: 'k': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(321): warning C4133: 'function': incompatible types - from 'yuvPixel *' to 'rgbPixel *'
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(275): warning C4101: 'k': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(279): warning C4101: 'convertedRgbBlock': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(275): warning C4101: 'rowOffset': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(280): warning C4101: 'original': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(277): warning C4101: 'rgbBlock': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(280): warning C4101: 'rgbBlocks': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(275): warning C4101: 'j': unreferenced local variable
-     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(275): warning C4101: 'columnOffset': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(151): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(153): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(155): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(175): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(177): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(179): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(200): warning C4244: '=': conversion from 'double' to 'uint8_t', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(205): warning C4244: '=': conversion from 'double' to 'uint8_t', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(208): warning C4244: '=': conversion from 'double' to 'uint8_t', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(260): warning C4101: 'k': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(322): warning C4101: 'k': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(322): warning C4101: 'rowOffset': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(326): warning C4101: 'original': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(322): warning C4101: 'j': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(322): warning C4101: 'columnOffset': unreferenced local variable
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.lib" /MACHINE:X64 x64\Debug\Main.obj
          rgbToYuvBenchmark.vcxproj -> D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.exe
@@ -28,4 +30,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.70
+Time Elapsed 00:00:01.36
