@@ -6,9 +6,12 @@
 #include <string.h>
 #include <time.h>
 
+#include <dirent.h>
+
 #define BLOCK_WIDTH 8
 #define BLOCK_HEIGHT 8
 #define PI M_PI
+#define OUT_DIR "out\\"
 
 unsigned propertiesLength = 0;
 
@@ -38,6 +41,16 @@ void printSomething(char* title, struct rgbPixel* out, int x, int y) {
 	}
 }
 
+
+char* concat(char *s1, char *s2)
+{
+	int stringLen = strlen(s1) + strlen(s2) + 1;
+	char *result = malloc(strlen(s1) + strlen(s2) + 1);//+1 for the zero-terminator
+													   //in real code you would check for errors in malloc here
+	strcpy_s(result, stringLen, s1);
+	strcat_s(result, stringLen, s2);
+	return result;
+}
 
 /**Reads properties from header of image*/
 void readImageProperties(FILE *img, unsigned *imgHeight, unsigned *imgWidth,
@@ -317,7 +330,7 @@ void saveBlocksToppm(char* fileName, struct rgbPixel **blocks, unsigned imageWid
 ** 1. -> image name
 */
 int main(int argc, char *argv[]) {
-	char *imgName;
+	char *imgDir;
 	unsigned int blockNum = 0, imgHeight, imgWidth,
 		maxColorValue, rowOffset, columnOffset, BLOCK_NUM, i, j, k;
 	FILE *img = NULL;
@@ -336,58 +349,108 @@ int main(int argc, char *argv[]) {
 	clock_t start = clock();
 
 	/**Read input arguments*/
-	imgName = argv[1];
-	/*blockNum = atoi(argv[2]);
-	outputName = argv[3];*/
+	imgDir = argv[1];
 
-	/**Open an image file*/
-	if (fopen_s(&img, imgName, "rb") != 0) {
-		perror("Error while opening file.");
-		return -2;
-	}
-
-	image = readImage(img, &imgHeight, &imgWidth, &maxColorValue);
-	///**Read properties*/
-	//readImageProperties(img, &imgHeight, &imgWidth, &maxColorValue);
-
-	BLOCK_NUM = (imgWidth / BLOCK_WIDTH) * (imgHeight / BLOCK_HEIGHT);
-
-	standardRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
-	shiftRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
-	optimizedShiftRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
-	yuvImage = malloc(imgWidth * imgHeight * sizeof(struct yuvPixel));
+	char* path = NULL;
 
 	clock_t sRgb2Yuv, eRgb2Yuv;
-	for (i = 0; i < BLOCK_NUM; ++i) {
-		/**Convert from RGB to yuv */
-		/* Standard */
-		sRgb2Yuv = clock();
-		standardRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
-		eRgb2Yuv = clock();
-		standardTime += eRgb2Yuv - sRgb2Yuv;
-		yuvToRgb(yuvImage, imgHeight, imgWidth, i, standardRgbImage);
 
-		/* Shift */
-		sRgb2Yuv = clock();
-		shiftRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
-		eRgb2Yuv = clock();
-		shiftTime += eRgb2Yuv - sRgb2Yuv;
-		yuvToRgb(yuvImage, imgHeight, imgWidth, i, shiftRgbImage);
+	/* Get files from dir */
+	DIR *pdir = opendir(imgDir);
+	struct dirent *pent = NULL;
+	if (pdir == NULL) // if pdir wasn't initialised correctly
+	{ // print an error message and exit the program
+		printf("\nERROR! pdir could not be initialised correctly\n");
+		return; // exit the function
+	} // end if
 
-		/* Optimized Shift */
-		sRgb2Yuv = clock();
-		optimizedShiftRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
-		eRgb2Yuv = clock();
-		optimizedShiftTime += eRgb2Yuv - sRgb2Yuv;
-		yuvToRgb(yuvImage, imgHeight, imgWidth, i, optimizedShiftRgbImage);
+	while (pent = readdir(pdir)) // while there is still something in the directory to list
+	{
+		if (pent == NULL) // if pent has not been initialised correctly
+		{ // print an error message, and exit the program
+
+			printf("\nERROR! pent could not be initialised correctly\n");
+			return; // exit the function
+		}
+			// otherwise, it was initialised correctly. let's print it on the console:
+		//printf("%s\n", pent->d_name);
+
+		if (!strcmp(pent->d_name, "."))
+			continue;
+		if (!strcmp(pent->d_name, ".."))
+			continue;
+
+		path = concat(imgDir, "\\");
+		path = concat(path, pent->d_name);
+		printf("Running: %s\n", path);
+		/**Open an image file*/
+		if (fopen_s(&img, path, "rb") != 0) {
+			perror("Error while opening file.\n");
+			continue;
+		}
+		free(path);
+
+		image = readImage(img, &imgHeight, &imgWidth, &maxColorValue);
+		///**Read properties*/
+		//readImageProperties(img, &imgHeight, &imgWidth, &maxColorValue);
+
+		BLOCK_NUM = (imgWidth / BLOCK_WIDTH) * (imgHeight / BLOCK_HEIGHT);
+
+		standardRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
+		shiftRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
+		optimizedShiftRgbImage = malloc(imgWidth * imgHeight * sizeof(struct rgbPixel));
+		yuvImage = malloc(imgWidth * imgHeight * sizeof(struct yuvPixel));
+
+		for (i = 0; i < BLOCK_NUM; ++i) {
+			/**Convert from RGB to yuv */
+			/* Standard */
+			sRgb2Yuv = clock();
+			standardRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
+			eRgb2Yuv = clock();
+			standardTime += eRgb2Yuv - sRgb2Yuv;
+			yuvToRgb(yuvImage, imgHeight, imgWidth, i, standardRgbImage);
+
+			/* Shift */
+			sRgb2Yuv = clock();
+			shiftRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
+			eRgb2Yuv = clock();
+			shiftTime += eRgb2Yuv - sRgb2Yuv;
+			yuvToRgb(yuvImage, imgHeight, imgWidth, i, shiftRgbImage);
+
+			/* Optimized Shift */
+			sRgb2Yuv = clock();
+			optimizedShiftRgbToYuv(image, imgHeight, imgWidth, i, yuvImage);
+			eRgb2Yuv = clock();
+			optimizedShiftTime += eRgb2Yuv - sRgb2Yuv;
+			yuvToRgb(yuvImage, imgHeight, imgWidth, i, optimizedShiftRgbImage);
+		}
+
+		//printSomething("rgbImage", image, imgHeight, imgWidth);
+
+
+		char *out = concat("out\\original_", pent->d_name);
+		saveImgAsppm(out, image, imgWidth, imgHeight, maxColorValue);
+
+		free(out);
+		out = concat("out\\standardRgb_", pent->d_name);
+		saveImgAsppm(out, standardRgbImage, imgWidth, imgHeight, maxColorValue);
+
+		free(out);
+		out = concat("out\\shiftRgb_", pent->d_name);
+		saveImgAsppm(out, shiftRgbImage, imgWidth, imgHeight, maxColorValue);
+
+		free(out);
+		out = concat("out\\optimizedShiftRgb_", pent->d_name);
+		saveImgAsppm(out, optimizedShiftRgbImage, imgWidth, imgHeight, maxColorValue);
+
+		/* Free alocated space */
+		free(out);
+		free(image);
+		free(standardRgbImage);
+		free(shiftRgbImage);
+		free(yuvImage);
 	}
 
-	//printSomething("rgbImage", image, imgHeight, imgWidth);
-
-	saveImgAsppm("out_original.ppm", image, imgWidth, imgHeight, maxColorValue);
-	saveImgAsppm("out_standardRgb.ppm", standardRgbImage, imgWidth, imgHeight, maxColorValue);
-	saveImgAsppm("out_shiftRgb.ppm", shiftRgbImage, imgWidth, imgHeight, maxColorValue);
-	saveImgAsppm("out_optimizedShiftRgb.ppm", optimizedShiftRgbImage, imgWidth, imgHeight, maxColorValue);
 
 	clock_t end = clock();
 	printf("Standard conversion: %f\n", standardTime / CLOCKS_PER_SEC);
@@ -395,11 +458,7 @@ int main(int argc, char *argv[]) {
 	printf("Optmized shift conversion: %f\n", optimizedShiftTime / CLOCKS_PER_SEC);
 	printf("Total time: %f\n", (float)(end - start) / CLOCKS_PER_SEC);
 
-	/* Free alocated space */
-	free(image);
-	free(standardRgbImage);
-	free(shiftRgbImage);
-	free(yuvImage);
+
 	/**Close image file it's not needed*/
 	fclose(img);
 	return 0;
