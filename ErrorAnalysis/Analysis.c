@@ -189,7 +189,9 @@ int main(int argc, char *argv[]) {
 	resultsFileName = appendString(resultsFileName, "_");
 	resultsFileName = appendString(resultsFileName, argv[2]);
 	resultsFileName = appendString(resultsFileName, ".csv");
-	FILE *outFile = fopen(resultsFileName, "w");
+	FILE *outFile;
+	printf("\n%s\n", resultsFileName);
+	fopen_s(&outFile, resultsFileName, "w");
 	if (outFile == NULL)
 	{
 		printf("Error opening file!\n");

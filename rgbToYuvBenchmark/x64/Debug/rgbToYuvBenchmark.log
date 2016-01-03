@@ -1,24 +1,38 @@
-﻿Build started 5.12.2015. 20:50:08.
-     1>Project "C:\Users\Matija\Desktop\JPEG Project\GIT REPO\rgbToYuvBenchmark\rgbToYuvBenchmark\rgbToYuvBenchmark.vcxproj" on node 2 (Build target(s)).
+﻿Build started 03/01/2016 18:29:54.
+     1>Project "D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\rgbToYuvBenchmark\rgbToYuvBenchmark.vcxproj" on node 3 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TC /errorReport:prompt Main.c
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _IPP_SEQUENTIAL_DYNAMIC /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TC /errorReport:prompt Main.c
          Main.c
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(54): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(146): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(148): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(150): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(161): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(163): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(165): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(180): warning C4244: '=': conversion from 'float' to 'uint8_t', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(185): warning C4244: '=': conversion from 'float' to 'uint8_t', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(188): warning C4244: '=': conversion from 'float' to 'uint8_t', possible loss of data
-     1>c:\users\matija\desktop\jpeg project\git repo\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(302): warning C4244: 'return': conversion from 'clock_t' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(79): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(171): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(173): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(175): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(186): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(188): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(190): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(205): warning C4244: '=': conversion from 'float' to 'uint8_t', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(210): warning C4244: '=': conversion from 'float' to 'uint8_t', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(213): warning C4244: '=': conversion from 'float' to 'uint8_t', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(237): warning C4101: 'j': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(237): warning C4101: 'i': unreferenced local variable
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(302): warning C4244: 'return': conversion from 'clock_t' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(308): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(309): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(322): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(323): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(325): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(326): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(340): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(341): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(342): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(351): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(352): warning C4018: '<': signed/unsigned mismatch
+     1>d:\moji dokumenti\mega\danijel\faks\diplomski\3. semestar\projekt\rgbtoyuvbenchmark\rgbtoyuvbenchmark\main.c(379): warning C4018: '<': signed/unsigned mismatch
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Matija\Desktop\JPEG Project\GIT REPO\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\Matija\Desktop\JPEG Project\GIT REPO\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Matija\Desktop\JPEG Project\GIT REPO\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.lib" /MACHINE:X64 x64\Debug\Main.obj
-         rgbToYuvBenchmark.vcxproj -> C:\Users\Matija\Desktop\JPEG Project\GIT REPO\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.exe
-     1>Done Building Project "C:\Users\Matija\Desktop\JPEG Project\GIT REPO\rgbToYuvBenchmark\rgbToYuvBenchmark\rgbToYuvBenchmark.vcxproj" (Build target(s)).
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.lib" /MACHINE:X64 x64\Debug\Main.obj
+         rgbToYuvBenchmark.vcxproj -> D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\x64\Debug\rgbToYuvBenchmark.exe
+     1>Done Building Project "D:\Moji Dokumenti\Mega\Danijel\Faks\Diplomski\3. semestar\Projekt\rgbToYuvBenchmark\rgbToYuvBenchmark\rgbToYuvBenchmark.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.67
+Time Elapsed 00:00:01.85

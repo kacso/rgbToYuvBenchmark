@@ -227,12 +227,7 @@ void saveHeaderOfppm(char* fileName, ImageProperties imgProp)
 	}
 
 	fprintf(output, "P6\n%d %d\n%d\n", imgProp.Width, imgProp.Height, imgProp.maxColorValue);
-	//fprintf(output, "P6");
-	//fwrite(0x0a, sizeof(char), 1, output);
-	//fprintf(output, "%d %d", imgWidth, imgHeight);
-	//fwrite(0x0a, sizeof(char), 1, output);
-	//fprintf(output, "%d", maxColorValue);
-	//fwrite(0x0a, sizeof(char), 1, output);
+
 	fclose(output);
 }
 
@@ -250,13 +245,16 @@ void saveImgAsppm(char* fileName, PixelRGB *blocks, ImageProperties imgProp)
 
 	fprintf(output, "P6\n%d %d\n%d\n", imgProp.Width, imgProp.Height, imgProp.maxColorValue);
 
-	for (i = 0; i < imgProp.Height; ++i) {
+
+	fwrite(blocks, sizeof(PixelRGB), imgProp.Height * imgProp.Width, output);
+
+	/*for (i = 0; i < imgProp.Height; ++i) {
 		for (j = 0; j < imgProp.Width; ++j) {
 			fwrite(&blocks[i * imgProp.Width + j].R, sizeof(uint8_t), 1, output);
 			fwrite(&blocks[i * imgProp.Width + j].G, sizeof(uint8_t), 1, output);
 			fwrite(&blocks[i * imgProp.Width + j].B, sizeof(uint8_t), 1, output);
 		}
-	}
+	}*/
 	fclose(output);
 }
 
