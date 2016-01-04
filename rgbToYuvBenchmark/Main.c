@@ -28,6 +28,14 @@ typedef struct
 
 typedef struct
 {
+	int8_t Y;
+	int8_t U;
+	int8_t V;
+}PixelQuantized;
+
+
+typedef struct
+{
 	unsigned Height;
 	unsigned Width;
 	unsigned maxColorValue;
@@ -36,6 +44,23 @@ typedef struct
 
 typedef void(*conversionFunction)(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvImage);
 
+
+uint8_t k1_table[8][8] = { { 16, 11, 10, 16, 24, 40, 51, 61 },
+{ 12, 12, 14, 19, 26, 58, 60, 55 },
+{ 14, 13, 16, 24, 40, 57, 69, 56 },
+{ 14, 17, 22, 29, 51, 87, 80, 62 },
+{ 18, 22, 37, 56, 68, 109, 103, 77 },
+{ 24, 35, 55, 64, 81, 104, 113, 92 },
+{ 49, 64, 78, 87, 103, 121, 120, 101 },
+{ 72, 92, 95, 98, 112, 100, 103, 99 } };
+uint8_t k2_table[8][8] = { { 17, 18, 24, 47, 99, 99, 99, 99 },
+{ 18, 21, 26, 66, 99, 99, 99, 99 },
+{ 24, 26, 56, 99, 99, 99, 99, 99 },
+{ 47, 66, 99, 99, 99, 99, 99, 99 },
+{ 99, 99, 99, 99, 99, 99, 99, 99 },
+{ 99, 99, 99, 99, 99, 99, 99, 99 },
+{ 99, 99, 99, 99, 99, 99, 99, 99 },
+{ 99, 99, 99, 99, 99, 99, 99, 99 } };
 
 
 void printSomething(char* title, PixelRGB* out, int x, int y) {
@@ -191,29 +216,6 @@ PixelRGB* yuvToRgb(PixelYUV *yuvImage, ImageProperties imgProp) {
 	return rgbImage;	
 }
 
-
-/**Reads one block of 8x8
-Prerequest: *img is in front of right row
-*/
-//void readBlock(FILE *img, unsigned rowOffset, unsigned columnOffset, unsigned rowWidth, struct rgbPixel *readedBlock) {
-//	struct rgbPixel *readedLine = malloc(rowWidth * sizeof(struct rgbPixel));
-//	unsigned i, j;
-//	if (readedLine == NULL) {
-//		perror("Malloc error");
-//	}
-//
-//	fseek(img, propertiesLength + rowOffset * rowWidth, SEEK_SET);
-//
-//	for (i = 0; i < BLOCK_HEIGHT; i++) {
-//		fread(readedLine, sizeof(struct rgbPixel), rowWidth, img);
-//		for (j = 0; j < BLOCK_WIDTH; j++) { 
-//			readedBlock[i * BLOCK_WIDTH + j] = readedLine[columnOffset + j];
-//		}
-//	}
-//	printSomething("Readed block", readedBlock, 8, 8);
-//	free(readedLine);
-//}
-
 void saveHeaderOfppm(char* fileName, ImageProperties imgProp)
 {
 	FILE *output;
@@ -225,12 +227,7 @@ void saveHeaderOfppm(char* fileName, ImageProperties imgProp)
 	}
 
 	fprintf(output, "P6\n%d %d\n%d\n", imgProp.Width, imgProp.Height, imgProp.maxColorValue);
-	//fprintf(output, "P6");
-	//fwrite(0x0a, sizeof(char), 1, output);
-	//fprintf(output, "%d %d", imgWidth, imgHeight);
-	//fwrite(0x0a, sizeof(char), 1, output);
-	//fprintf(output, "%d", maxColorValue);
-	//fwrite(0x0a, sizeof(char), 1, output);
+
 	fclose(output);
 }
 
@@ -248,13 +245,16 @@ void saveImgAsppm(char* fileName, PixelRGB *blocks, ImageProperties imgProp)
 
 	fprintf(output, "P6\n%d %d\n%d\n", imgProp.Width, imgProp.Height, imgProp.maxColorValue);
 
-	for (i = 0; i < imgProp.Height; ++i) {
+
+	fwrite(blocks, sizeof(PixelRGB), imgProp.Height * imgProp.Width, output);
+
+	/*for (i = 0; i < imgProp.Height; ++i) {
 		for (j = 0; j < imgProp.Width; ++j) {
 			fwrite(&blocks[i * imgProp.Width + j].R, sizeof(uint8_t), 1, output);
 			fwrite(&blocks[i * imgProp.Width + j].G, sizeof(uint8_t), 1, output);
 			fwrite(&blocks[i * imgProp.Width + j].B, sizeof(uint8_t), 1, output);
 		}
-	}
+	}*/
 	fclose(output);
 }
 
@@ -301,6 +301,100 @@ float TestConversion(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvI
 	free(optimizedShiftRgbImage);
 	return endTime - startTime;
 }
+
+
+void translateValuesOfBlock(PixelYUV *yuvImage, ImageProperties imgProp) {
+	int i, j;
+	for (i = 0; i < imgProp.Height; i++) {
+		for (j = 0; j < imgProp.Width; j++) {
+			yuvImage[i * imgProp.Width + j].Y -= 128;
+			yuvImage[i * imgProp.Width + j].U -= 128;
+			yuvImage[i * imgProp.Width + j].V -= 128;
+		}
+	}
+}
+
+void dct(PixelYUV *yuvImage, PixelYUV *dctImage, unsigned rowOffset, unsigned columnOffset, ImageProperties imgProp) {
+	int i, j, u, v;
+	double sumY, sumCb, sumCr, coscos, Cu = 1, Cv = 1;
+	double coef = 2 / sqrt(BLOCK_HEIGHT * BLOCK_WIDTH);
+
+	for (u = rowOffset; u < (rowOffset + BLOCK_HEIGHT); u++) {
+		for (v = columnOffset; v < (columnOffset + BLOCK_WIDTH); v++) {
+			sumY = sumCb = sumCr = 0;
+			for (i = rowOffset; i < (rowOffset + BLOCK_HEIGHT); i++) {
+				for (j = columnOffset; j < (columnOffset + BLOCK_WIDTH); j++) {
+					coscos = cos((2.0 * i + 1) * u * PI / (2.0 * BLOCK_HEIGHT)) *
+						cos((2.0 * j + 1) * v * PI / (2.0 * BLOCK_WIDTH));
+					sumY += yuvImage[i * imgProp.Width + j].Y * coscos;
+					sumCb += yuvImage[i * imgProp.Width + j].U * coscos;
+					sumCr += yuvImage[i * imgProp.Width + j].V * coscos;
+				}
+			}
+
+			if (u == 0 && v == 0) {
+				Cu = sqrt(0.5);
+				Cv = sqrt(0.5);
+			}
+
+			dctImage[u * imgProp.Width + v].Y = coef * Cu * Cv * sumY;
+			dctImage[u * imgProp.Width + v].U = coef * Cu * Cv * sumCb;
+			dctImage[u * imgProp.Width + v].V = coef * Cu * Cv * sumCr;
+
+		}
+	}
+}
+
+void quantizationOfYuvPixel(PixelYUV *dctImg, PixelQuantized *quantizedImg, unsigned rowOffset, unsigned columnOffset, ImageProperties imgProp) {
+	int i, j;
+
+	for (i = rowOffset; i < (rowOffset + BLOCK_HEIGHT); i++) {
+		for (j = columnOffset; j < (columnOffset + BLOCK_WIDTH); j++) {
+			quantizedImg[i * imgProp.Width + j].Y = (int8_t)lround(dctImg[i * imgProp.Width + j].Y /
+				k1_table[i][j]);
+			quantizedImg[i * imgProp.Width + j].U = (int8_t)lround(dctImg[i * imgProp.Width + j].U /
+				k2_table[i][j]);
+			quantizedImg[i * imgProp.Width + j].V = (int8_t)lround(dctImg[i * imgProp.Width + j].V /
+				k2_table[i][j]);
+		}
+	}
+}
+
+
+
+void toJPEG(PixelRGB *rgbImage, ImageProperties imgProp, char* fileName, conversionFunction function) {
+	PixelYUV *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV));
+	PixelYUV *dctImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV));
+	PixelQuantized *quantizedImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelQuantized));
+
+	float rgb2YuvConversionTime;
+	int blockNum = (imgProp.Width/ BLOCK_WIDTH) * (imgProp.Height / BLOCK_HEIGHT);
+
+	/**RGB -> YUV conversion*/
+	rgb2YuvConversionTime = TestConversion(rgbImage, imgProp, yuvImage, fileName, function);
+	
+	/**Make translation*/
+	translateValuesOfBlock(yuvImage, imgProp);
+
+	for (unsigned i = 0; i < blockNum; ++i) {
+		/**Find block to read*/
+		unsigned rowOffset = i / (imgProp.Width / BLOCK_WIDTH) * BLOCK_HEIGHT;
+		unsigned columnOffset = (i % (imgProp.Width / BLOCK_WIDTH))  * BLOCK_WIDTH;
+
+
+		/**Make DCT*/
+		dct(yuvImage, dctImage, rowOffset, columnOffset, imgProp);
+
+		/**Make quantization*/
+		quantizationOfYuvPixel(dctImage, quantizedImage, rowOffset, columnOffset, imgProp);
+
+	}
+
+	free(yuvImage);
+	free(dctImage);
+	free(quantizedImage);
+}
+
 
 /**Input arguments
 ** 1. -> image name
@@ -372,48 +466,12 @@ int main(int argc, char *argv[]) {
 		/* Standard */
 		standardTime += TestConversion(originalImage, imgProp, yuvImage, concat("out\\standardRgb_", pent->d_name), &standardRgbToYuv);
 
-		/*startTime = clock();
-		standardRgbToYuv(originalImage, imgProp, yuvImage);
-		endTime = clock();
-		standardTime += endTime - startTime;
-		PixelRGB *standardRgbImage = yuvToRgb(yuvImage, imgProp);
-
-		outputFileName = concat("out\\standardRgb_", pent->d_name);
-		saveImgAsppm(outputFileName, standardRgbImage, imgProp);
-		free(outputFileName);
-		free(standardRgbImage);*/
-
-
 		/* Shift */
 		shiftTime += TestConversion(originalImage, imgProp, yuvImage, concat("out\\shiftRgb_", pent->d_name), &shiftRgbToYuv);
-
-		/*startTime = clock();
-		shiftRgbToYuv(originalImage, imgProp, yuvImage);
-		endTime = clock();
-		shiftTime += endTime - startTime;
-		PixelRGB *shiftRgbImage = yuvToRgb(yuvImage, imgProp);
-
-		outputFileName = concat("out\\shiftRgb_", pent->d_name);
-		saveImgAsppm(outputFileName, shiftRgbImage, imgProp);
-		free(outputFileName);
-		free(shiftRgbImage);*/
 
 		/* Optimized Shift */
 		optimizedShiftTime += TestConversion(originalImage, imgProp, yuvImage, concat("out\\optimizedShiftRgb_", pent->d_name), &optimizedShiftRgbToYuv);
 		
-		/*startTime = clock();
-		optimizedShiftRgbToYuv(originalImage, imgProp, yuvImage);
-		endTime = clock();
-		optimizedShiftTime += endTime - startTime;
-		PixelRGB *optimizedShiftRgbImage = yuvToRgb(yuvImage, imgProp);
-
-		outputFileName = concat("out\\optimizedShiftRgb_", pent->d_name);
-		saveImgAsppm(outputFileName, optimizedShiftRgbImage, imgProp);
-		free(outputFileName);
-		free(optimizedShiftRgbImage);
-		*/
-
-		//printSomething("rgbImage", image, imgHeight, imgWidth);
 
 		/* Free alocated space */	
 		free(originalImage);
