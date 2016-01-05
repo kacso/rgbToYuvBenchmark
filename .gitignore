@@ -281,3 +281,6 @@ _Pvt_Extensions
 .fake/
 
 *.ppm
+*.csv
+rgbToYuvBenchmark/out/ErrorAnalysis.exe
+
