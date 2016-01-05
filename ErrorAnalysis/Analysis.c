@@ -6,22 +6,12 @@
 #include <time.h>
 #include <dirent.h>
 
-#define DIFFERENCE_THRESHOLD 2
-
-
 typedef struct
 {
 	uint8_t R;
 	uint8_t G;
 	uint8_t B;
 } PixelRGB;
-
-typedef struct
-{
-	float Y;
-	float U;
-	float V;
-} PixelYUV;
 
 typedef struct
 {
@@ -89,30 +79,6 @@ PixelRGB *loadRGBImage(FILE *imgFile, ImageProperties imgProp)
 	return image;
 }
 
-void saveImgAsppm(char* fileName, PixelRGB *blocks, ImageProperties imgProp)
-{
-	//struct rgbPixel *readedLine = malloc(rowWidth * sizeof(struct rgbPixel));
-	unsigned i, j;
-	FILE *output;
-
-	/**Open an output file*/
-	if (fopen_s(&output, fileName, "wb") != 0) {
-		printf("Error while opening output file.");
-		exit(-2);
-	}
-
-	fprintf(output, "P6\n%d %d\n%d\n", imgProp.Width, imgProp.Height, imgProp.maxColorValue);
-
-	for (i = 0; i < imgProp.Height; ++i) {
-		for (j = 0; j < imgProp.Width; ++j) {
-			fwrite(&blocks[i * imgProp.Width + j].R, sizeof(uint8_t), 1, output);
-			fwrite(&blocks[i * imgProp.Width + j].G, sizeof(uint8_t), 1, output);
-			fwrite(&blocks[i * imgProp.Width + j].B, sizeof(uint8_t), 1, output);
-		}
-	}
-	fclose(output);
-}
-
 char *appendString(char *s1, char *s2)
 {
 	size_t stringLen = strlen(s1) + strlen(s2) + 1;
@@ -131,6 +97,8 @@ int main(int argc, char *argv[]) {
 		perror("Wrong number of arguments.");
 		return -1;
 	}
+	printf("comparing %s and %s \n", argv[1], argv[2]);
+	//Loading first image
 	FILE *firstImageFile = NULL;
 	if (fopen_s(&firstImageFile, argv[1], "rb") != 0) {
 		perror("Error while opening file.\n");
@@ -139,7 +107,7 @@ int main(int argc, char *argv[]) {
 	PixelRGB *firstImage = loadRGBImage(firstImageFile, firstImgProp);
 	fclose(firstImageFile);
 
-
+	//Loading second image
 	FILE *secondImageFile = NULL;
 	if (fopen_s(&secondImageFile, argv[2], "rb") != 0) {
 		perror("Error while opening file.\n");
@@ -151,39 +119,43 @@ int main(int argc, char *argv[]) {
 		perror("Error - Different file sizes.\n");
 
 	unsigned int numberOfPixels = firstImgProp.Height * firstImgProp.Width;
-	PixelRGB *diifImage = malloc(numberOfPixels * sizeof(PixelRGB));
-	int differenceCount[4][256*3];
-	for (unsigned i = 0; i < 4; i++)
-	{
-		for (unsigned j = 0; j < 256 * 3; j++)
-		{
+	unsigned diffR, diffG, diffB, diffTotal, maxDiff = 0;
+	unsigned int squaredError = 0;
+
+	//Initialize difference array to 0
+	int differenceCount[4][256 * 3]; // [R,G,B,Total] X [pixel difference]
+	for (unsigned i = 0; i < 4; i++)	
+		for (unsigned j = 0; j < 256 * 3; j++)		
 			differenceCount[i][j] = 0;
-		}
-	}
-	unsigned diffR,diffG,diffB,diffTotal, maxDiff = 0;
-	for (unsigned i = 0; i < numberOfPixels; i++) {
+	
+	//Start comparison
+	for (unsigned i = 0; i < numberOfPixels; i++) { // i = current pixel
 		diffR = abs(firstImage[i].R - secondImage[i].R);
 		diffG = abs(firstImage[i].G - secondImage[i].G);
 		diffB = abs(firstImage[i].B - secondImage[i].B);
 		diffTotal = diffR + diffG + diffB;
-		differenceCount[0][diffR] ++;
-		differenceCount[1][diffG] ++;
-		differenceCount[2][diffB] ++;
-		differenceCount[3][diffTotal] ++;
-		if (diffTotal > maxDiff) maxDiff = diffTotal;
-		if (diffTotal >= DIFFERENCE_THRESHOLD)
-		{
-			diifImage[i].R = 0;
-			diifImage[i].G = 0;
-			diifImage[i].B = 0;
-		}
-		else
-		{
-			diifImage[i].R = 255;
-			diifImage[i].G = 255;
-			diifImage[i].B = 255;
-		}
+		(differenceCount[0][diffR]) ++;
+		(differenceCount[1][diffG]) ++;
+		(differenceCount[2][diffB]) ++;
+		(differenceCount[3][diffTotal]) ++;
+		if (diffTotal > 0) squaredError += (diffTotal * diffTotal);
+		if (diffTotal > maxDiff) maxDiff = diffTotal;	
 	}
+
+	//Difference count check
+	unsigned diffSum = 0;
+	for (unsigned i = 0; i < 256 * 3; i++) diffSum += differenceCount[0][i];
+	if(diffSum != numberOfPixels) printf("Wrong count of red different pixels! \n");
+	diffSum = 0;
+	for (unsigned i = 0; i < 256 * 3; i++) diffSum += differenceCount[1][i];
+	if (diffSum != numberOfPixels) printf("Wrong count of green different pixels! \n");
+	diffSum = 0;
+	for (unsigned i = 0; i < 256 * 3; i++) diffSum += differenceCount[2][i];
+	if (diffSum != numberOfPixels) printf("Wrong count of blue different pixels! \n");
+
+	//Format and save comparison results
+	double meanSquaredError = (squaredError / numberOfPixels);
+	printf("Mean squared error: %f \n", meanSquaredError);
 	char *resultsFileName = "comparison_";
 	resultsFileName = appendString(resultsFileName, argv[1]);
 	resultsFileName = appendString(resultsFileName, "_");
@@ -197,30 +169,24 @@ int main(int argc, char *argv[]) {
 		printf("Error opening file!\n");
 		exit(1);
 	}
-	fprintf(outFile, "Differences\t Red \t(percent) \tGreen \t(percent) \tBlue \t(percent) \tTotal \t(percent) \n");
+	fprintf(outFile, "Different pixels\t Red \t(percent) \tGreen \t(percent) \tBlue \t(percent) \tTotal \t(percent) \n");
+	
 	for (unsigned i = 0; i <= maxDiff; i++)
 	{
-		fprintf(outFile,"%d \t %6d \t%f \t%6d \t%f \t%6d \t%f \t%6d \t%f \n",
+		fprintf(outFile,"%d \t %6u \t%f \t%6u \t%f \t%6u \t%f \t%6u \t%f \n",
 			i,
 			differenceCount[0][i], 
-			((float)(differenceCount[0][i]) / numberOfPixels),
+			((float)(100 * differenceCount[0][i]) / numberOfPixels),
 			differenceCount[1][i],
-			((float)(differenceCount[1][i]) / numberOfPixels),
+			((float)(100 * differenceCount[1][i]) / numberOfPixels),
 			differenceCount[2][i],
-			((float)(differenceCount[2][i]) / numberOfPixels),
+			((float)(100 * differenceCount[2][i]) / numberOfPixels),
 			differenceCount[3][i],
-			((float)(differenceCount[3][i]) / numberOfPixels)
+			((float)(100 * differenceCount[3][i]) / numberOfPixels)
 			);
 	}
+
 	fclose(outFile);
-
-	char *outputFileName = "comparison_";	
-	outputFileName = appendString(outputFileName, argv[1]);
-	outputFileName = appendString(outputFileName, "_");
-	outputFileName = appendString(outputFileName, argv[2]);
-
-	saveImgAsppm(outputFileName, diifImage, firstImgProp);
-	free(outputFileName);
 	free(firstImage);
 	free(secondImage);
 	return 0;
