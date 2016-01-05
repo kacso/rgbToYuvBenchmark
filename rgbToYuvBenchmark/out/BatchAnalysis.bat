@@ -1,5 +1,0 @@
-ErrorAnalysis.exe original_lenna.ppm original_lenna.ppm
-ErrorAnalysis.exe original_lenna.ppm shiftRgb_lenna.ppm
-ErrorAnalysis.exe original_lenna.ppm standardRgb_lenna.ppm
-ErrorAnalysis.exe original_lenna.ppm optimizedShiftRgb_lenna.ppm
-pause
