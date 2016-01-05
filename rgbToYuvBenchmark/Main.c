@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <dirent.h>
+#include <ipp.h>
 
 #define BLOCK_WIDTH 8
 #define BLOCK_HEIGHT 8
@@ -192,8 +193,15 @@ void optimizedShiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp, PixelYU
 	}
 }
 
-/**Converts from rgb to yuv
-Values are returned through variables Y, Cb and Cr */
+void ippRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvImage) {
+	IppiSize size;
+	size.height = imgProp.Height;
+	size.width = imgProp.Width;
+	IppStatus status = ippiRGBToYUV_8u_C3R((Ipp8u*)rgbImage, 1, (Ipp8u*) yuvImage, 1, size);
+	
+}
+
+/** Converts from yuv to rgb */
 PixelRGB* yuvToRgb(PixelYUV *yuvImage, ImageProperties imgProp) {
 	PixelRGB *rgbImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelRGB));
 	unsigned int index, i, j;
@@ -401,6 +409,7 @@ void toJPEG(PixelRGB *rgbImage, ImageProperties imgProp, char* fileName, convers
 */
 int main(int argc, char *argv[]) {
 	float standardTime = 0, shiftTime = 0, optimizedShiftTime = 0;
+	float ippTime = 0;
 
 	/**Check if 3 arguments are entered*/
 	if (argc != 2) {
@@ -472,6 +481,7 @@ int main(int argc, char *argv[]) {
 		/* Optimized Shift */
 		optimizedShiftTime += TestConversion(originalImage, imgProp, yuvImage, concat("out\\optimizedShiftRgb_", pent->d_name), &optimizedShiftRgbToYuv);
 		
+		ippTime += TestConversion(originalImage, imgProp, yuvImage, concat("out\\ippRgb_", pent->d_name), &ippRgbToYuv);
 
 		/* Free alocated space */	
 		free(originalImage);
@@ -482,6 +492,7 @@ int main(int argc, char *argv[]) {
 	printf("Standard conversion: %f\n", standardTime / CLOCKS_PER_SEC);
 	printf("Shift conversion: %f\n", shiftTime / CLOCKS_PER_SEC);
 	printf("Optmized shift conversion: %f\n", optimizedShiftTime / CLOCKS_PER_SEC);
+	printf("Ipp conversion: %f\n", ippTime / CLOCKS_PER_SEC);
 	printf("Total time: %f\n", (float)(end - start) / CLOCKS_PER_SEC);
 
 	return 0;
