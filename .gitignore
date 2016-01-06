@@ -281,6 +281,14 @@ _Pvt_Extensions
 .fake/
 
 *.ppm
+<<<<<<< HEAD
 *.csv
 rgbToYuvBenchmark/out/ErrorAnalysis.exe
 
+=======
+rgbToYuvBenchmark.sdf
+*.csv
+x64/Debug/ErrorAnalysis.exe
+rgbToYuvBenchmark/out/ErrorAnalysis.exe
+x64/Debug/rgbToYuvBenchmark.exe
+>>>>>>> c94549064fe843a227fed444d7356ba0c899db83
