@@ -1,52 +1,7 @@
-#define _USE_MATH_DEFINES
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <math.h>
-#include <string.h>
-#include <time.h>
-#include <dirent.h>
-#include <ipp.h>
-
+#include "Main.h"
 #include "EntropyCoding.h"
 
-#define BLOCK_WIDTH 8
-#define BLOCK_HEIGHT 8
-#define PI M_PI
-#define OUT_DIR "out\\"
-
-typedef struct
-{
-	uint8_t R;
-	uint8_t G;
-	uint8_t B;
-} PixelRGB;
-
-typedef struct
-{
-	float Y;
-	float U;
-	float V;
-} PixelYUV;
-
-typedef struct
-{
-	int8_t Y;
-	int8_t U;
-	int8_t V;
-}PixelQuantized;
-
-
-typedef struct
-{
-	unsigned Height;
-	unsigned Width;
-	unsigned maxColorValue;
-	unsigned propertiesLength;
-} ImageProperties;
-
 typedef void(*conversionFunction)(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvImage);
-
 
 uint8_t k1_table[8][8] = { { 16, 11, 10, 16, 24, 40, 51, 61 },
 { 12, 12, 14, 19, 26, 58, 60, 55 },
@@ -56,6 +11,7 @@ uint8_t k1_table[8][8] = { { 16, 11, 10, 16, 24, 40, 51, 61 },
 { 24, 35, 55, 64, 81, 104, 113, 92 },
 { 49, 64, 78, 87, 103, 121, 120, 101 },
 { 72, 92, 95, 98, 112, 100, 103, 99 } };
+
 uint8_t k2_table[8][8] = { { 17, 18, 24, 47, 99, 99, 99, 99 },
 { 18, 21, 26, 66, 99, 99, 99, 99 },
 { 24, 26, 56, 99, 99, 99, 99, 99 },
@@ -307,11 +263,6 @@ float TestConversion(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvI
 	endTime = clock();
 	PixelRGB *optimizedShiftRgbImage = yuvToRgb(yuvImage, imgProp);
 
-	//TEST
-	FILE *output;
-	fopen_s(&output, fileName, "wb");
-	encode_picture(10, output);
-
 	saveImgAsppm(fileName, optimizedShiftRgbImage, imgProp);
 	free(optimizedShiftRgbImage);
 	return endTime - startTime;
@@ -360,7 +311,7 @@ void dct(PixelYUV *yuvImage, PixelYUV *dctImage, unsigned rowOffset, unsigned co
 }
 
 void quantizationOfYuvPixel(PixelYUV *dctImg, PixelQuantized *quantizedImg, unsigned rowOffset, unsigned columnOffset, ImageProperties imgProp) {
-	int i, j;
+	unsigned i, j;
 
 	for (i = rowOffset; i < (rowOffset + BLOCK_HEIGHT); i++) {
 		for (j = columnOffset; j < (columnOffset + BLOCK_WIDTH); j++) {
@@ -382,7 +333,7 @@ void toJPEG(PixelRGB *rgbImage, ImageProperties imgProp, char* fileName, convers
 	PixelQuantized *quantizedImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelQuantized));
 
 	float rgb2YuvConversionTime;
-	int blockNum = (imgProp.Width/ BLOCK_WIDTH) * (imgProp.Height / BLOCK_HEIGHT);
+	unsigned blockNum = (imgProp.Width/ BLOCK_WIDTH) * (imgProp.Height / BLOCK_HEIGHT);
 
 	/**RGB -> YUV conversion*/
 	rgb2YuvConversionTime = TestConversion(rgbImage, imgProp, yuvImage, fileName, function);
@@ -401,6 +352,11 @@ void toJPEG(PixelRGB *rgbImage, ImageProperties imgProp, char* fileName, convers
 
 		/**Make quantization*/
 		quantizationOfYuvPixel(dctImage, quantizedImage, rowOffset, columnOffset, imgProp);
+
+		//TEST
+		FILE *output;
+		fopen_s(&output, fileName, "wb");
+		encode_picture(quantizedImage, &imgProp, output);
 
 	}
 

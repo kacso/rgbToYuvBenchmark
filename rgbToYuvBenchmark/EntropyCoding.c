@@ -6,6 +6,8 @@
 #include <time.h>
 #include <stdbool.h>
 
+#include "EntropyCoding.h"
+
 static const int zigzag_block_order[8][8] = {
 	{ 0,  1,  5,  6, 14, 15, 27, 28 },
 	{ 2,  4,  7, 13, 16, 26, 29, 42 },
@@ -18,13 +20,12 @@ static const int zigzag_block_order[8][8] = {
 };
 
 #define MAX_COEF_BITS 10 /* The legal range of a DCT coefficient is -1024 .. +1023  for 8-bit data; */
-#define DCTSIZE 64
-#define OUTPUT_BUF_SIZE  4096	
+#define DCT_BLOCK_DIM 8
+#define DCT_BLOCK_SIZE 64
+#define OUTPUT_BUF_SIZE 32768  /* 4096	*/
 
 #define MEMZERO(target)	memset((void *)(target), 0, (size_t)(sizeof(target)))
 #define ERREXIT(msg) { perror(msg); exit(EXIT_FAILURE); }
-
-typedef int8_t Image_block[64];  //block = array of 64 shorts
 
 typedef struct {
 	int32_t code_buffer;					/* current bit-accumulation buffer */
@@ -52,8 +53,18 @@ typedef struct {
 	int8_t ehufsi[256];		   // length of code for each symbol. If no code has been allocated for a symbol S, ehufsi[S] contains 0
 } huffman_code;
 
+typedef int8_t Image_block[64]; 
+typedef Image_block *BlockRow;
+//typedef BlockRow BlockArray[3];
 
-coeficient_frequencies* gather_dct_symbol_statiscits(Image_block **imageBlocks, int32_t numberOfBlocks)
+typedef struct {
+	BlockRow * Y_blocks;
+	BlockRow * U_blocks;
+	BlockRow * V_blocks;
+	int numberOfBlocks;
+} block_struct;
+
+coeficient_frequencies* gather_dct_symbol_statiscits(BlockRow *imageBlocks, int32_t numberOfBlocks)
 {
 	coeficient_frequencies *coef = malloc(sizeof(coeficient_frequencies));
 	MEMZERO(coef->ac_freq);
@@ -61,7 +72,7 @@ coeficient_frequencies* gather_dct_symbol_statiscits(Image_block **imageBlocks, 
 
 	long last_dc_val = 0;
 	for (int blkn = 0; blkn < numberOfBlocks; blkn++) {
-		int *block = imageBlocks[blkn];
+		int8_t *block = *imageBlocks[blkn];
 		int coeff_value;
 		int zz_position;
 		int num_of_bits;
@@ -81,7 +92,7 @@ coeficient_frequencies* gather_dct_symbol_statiscits(Image_block **imageBlocks, 
 
 										// Encode the AC coefficients - explained in section F.1.2.2 
 		runlength = 0;
-		for (int k = 1; k <= DCTSIZE; k++) {
+		for (int k = 1; k <= DCT_BLOCK_SIZE; k++) {
 			zz_position = zigzag_block_order[k];
 			coeff_value = block[zz_position];
 			if (coeff_value == 0) {
@@ -318,7 +329,7 @@ void write_symbol_to_buffer(working_state * state, uint32_t code, int32_t size)
 }
 
 
-void encode_one_block(working_state * state, Image_block block, int last_dc_val, huffman_code *dctbl, huffman_code *actbl)
+void encode_one_block(working_state * state, int8_t *block, int last_dc_val, huffman_code *dctbl, huffman_code *actbl)
 {
 	int coeff_value, coeff_coded;
 	int num_of_bits;
@@ -348,7 +359,7 @@ void encode_one_block(working_state * state, Image_block block, int last_dc_val,
 
 	// Encode the AC coefficients - explained in section F.1.2.2 
 	runlength = 0;
-	for (int k = 1; k <= DCTSIZE; k++) {
+	for (int k = 1; k <= DCT_BLOCK_SIZE; k++) {
 		if ((coeff_coded = block[block_order[k]]) == 0) {
 			runlength++;
 		}
@@ -406,34 +417,54 @@ void initialaze_state(working_state *state, FILE * outFile)
 	state->output_file = outFile;
 }
 
-Image_block* get_blocks_from_image()
+block_struct* get_blocks_from_image(PixelQuantized *quantizedImg, ImageProperties *imgProp)
 {
-	int imageWidth = 500;
-	int imageHight = 600;
-
-	int block_rows = imageWidth / 8;
-	int block_columns = imageHight / 8;
+	int block_rows = imgProp->Height / DCT_BLOCK_DIM;
+	int block_columns = imgProp->Width / DCT_BLOCK_DIM;
 
 	int num_of_blocks = block_rows * block_columns;
 
-	Image_block * y_blocks = malloc(num_of_blocks*sizeof(Image_block));
-	Image_block * cb_blocks = malloc(num_of_blocks*sizeof(Image_block));
-	Image_block * cr_blocks = malloc(num_of_blocks*sizeof(Image_block));
+	block_struct *blocks = malloc(sizeof(block_struct));
+	blocks->numberOfBlocks = num_of_blocks;
+	blocks->U_blocks = malloc(num_of_blocks*sizeof(Image_block));
+	blocks->V_blocks = malloc(num_of_blocks*sizeof(Image_block));
+	blocks->Y_blocks = malloc(num_of_blocks*sizeof(Image_block));
+	MEMZERO(blocks->U_blocks);
+	MEMZERO(blocks->V_blocks);
+	MEMZERO(blocks->Y_blocks);
 
-
-	//memcpy(dest, src, strlen(src) + 1);
-
-	//for (i = rowOffset; i < (rowOffset + BLOCK_HEIGHT); i++) {
-	//for (j = columnOffset; j < (columnOffset + BLOCK_WIDTH); j++) {
-
-	//make struct for return
-	return y_blocks;
+	for (int b_col = 0; b_col < block_columns; b_col++) {
+		for (int b_row = 0; b_row < block_rows; b_row++) {
+			int current_block_num = b_col * block_columns + b_row;
+			int blockOffset = 0;
+			int col_offset = b_col * DCT_BLOCK_DIM;
+			int row_offset = b_row * DCT_BLOCK_DIM;
+			for (int i = 0; i < DCT_BLOCK_DIM; i++) 
+			{
+				int y_pos = col_offset * i;
+				for (int  j = 0; j < DCT_BLOCK_DIM; j++)
+				{
+					int x_pos = row_offset + j;
+					int index = y_pos*imgProp->Width + x_pos;
+					*blocks->U_blocks[current_block_num][blockOffset] = quantizedImg[index].U;
+					*blocks->V_blocks[current_block_num][blockOffset] = quantizedImg[index].V;
+					*blocks->Y_blocks[current_block_num][blockOffset] = quantizedImg[index].Y;
+					blockOffset++;
+				}				
+			}						
+		}
+	}	
+	return blocks;
 }
 
-void encode_picture(int32_t numberOfBlocks, FILE * outFile)
+void encode_picture(PixelQuantized *quantizedImg, ImageProperties *imgProp, FILE *outFile)
 {
-	Image_block **imageBlocks = get_blocks_from_image();
-	coeficient_frequencies *coef = gather_dct_symbol_statiscits(imageBlocks, numberOfBlocks);
+	block_struct *imageBlocks = get_blocks_from_image(quantizedImg, imgProp);
+	
+	//repeat for Y,U,V :
+	BlockRow *current_blocks = imageBlocks->U_blocks;
+
+	coeficient_frequencies *coef = gather_dct_symbol_statiscits(current_blocks, imageBlocks->numberOfBlocks);
 	huffman_specification *ac_spec = generate_huffman_specification_table(coef->ac_freq);
 	huffman_specification *dc_spec = generate_huffman_specification_table(coef->ac_freq);
 	huffman_code *ac_huff_code = generate_huffman_table(ac_spec, false);
@@ -445,10 +476,9 @@ void encode_picture(int32_t numberOfBlocks, FILE * outFile)
 	initialaze_state(&state, outFile);
 	//ENCODE
 	int last_dc_value = 0;
-	for (int blkn = 0; blkn < numberOfBlocks; blkn++) {
-
-		encode_one_block(&state, imageBlocks[blkn], last_dc_value, dc_huff_code, ac_huff_code);
-
-		last_dc_value = imageBlocks[blkn][0];
+	for (int blkn = 0; blkn < imageBlocks->numberOfBlocks; blkn++) {
+		encode_one_block(&state, current_blocks[blkn], last_dc_value, dc_huff_code, ac_huff_code);
+		last_dc_value = *current_blocks[blkn][0];
 	}
+
 }
