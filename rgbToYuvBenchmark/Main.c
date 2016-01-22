@@ -8,6 +8,8 @@
 #include <dirent.h>
 #include <ipp.h>
 
+#include "EntropyCoding.h"
+
 #define BLOCK_WIDTH 8
 #define BLOCK_HEIGHT 8
 #define PI M_PI
@@ -197,8 +199,7 @@ void ippRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvImage
 	IppiSize size;
 	size.height = imgProp.Height;
 	size.width = imgProp.Width;
-	IppStatus status = ippiRGBToYUV_8u_C3R((Ipp8u*)rgbImage, 1, (Ipp8u*) yuvImage, 1, size);
-	
+	IppStatus status = ippiRGBToYUV_8u_C3R((Ipp8u*)rgbImage, 1, (Ipp8u*) yuvImage, 1, size);	
 }
 
 /** Converts from yuv to rgb */
@@ -297,6 +298,7 @@ void saveBlocksToppm(char* fileName, PixelRGB **blocks, unsigned imageWidth)
 	fclose(output);
 }
 
+
 float TestConversion(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvImage, char* fileName, conversionFunction function)
 {
 	clock_t startTime, endTime;
@@ -305,11 +307,15 @@ float TestConversion(PixelRGB *rgbImage, ImageProperties imgProp, PixelYUV *yuvI
 	endTime = clock();
 	PixelRGB *optimizedShiftRgbImage = yuvToRgb(yuvImage, imgProp);
 
+	//TEST
+	FILE *output;
+	fopen_s(&output, fileName, "wb");
+	encode_picture(10, output);
+
 	saveImgAsppm(fileName, optimizedShiftRgbImage, imgProp);
 	free(optimizedShiftRgbImage);
 	return endTime - startTime;
 }
-
 
 void translateValuesOfBlock(PixelYUV *yuvImage, ImageProperties imgProp) {
 	int i, j;
@@ -483,16 +489,17 @@ int main(int argc, char *argv[]) {
 		
 		ippTime += TestConversion(originalImage, imgProp, yuvImage, concat("out\\ippRgb_", pent->d_name), &ippRgbToYuv);
 
-		/* Free alocated space */	
+		/* Free allocated space */	
 		free(originalImage);
 		free(yuvImage);
+
 	}
 
 	clock_t end = clock();
 	printf("Standard conversion: %f\n", standardTime / CLOCKS_PER_SEC);
 	printf("Shift conversion: %f\n", shiftTime / CLOCKS_PER_SEC);
-	printf("Optmized shift conversion: %f\n", optimizedShiftTime / CLOCKS_PER_SEC);
-	printf("Ipp conversion: %f\n", ippTime / CLOCKS_PER_SEC);
+	printf("Optimized shift conversion: %f\n", optimizedShiftTime / CLOCKS_PER_SEC);
+	printf("IPP conversion: %f\n", ippTime / CLOCKS_PER_SEC);
 	printf("Total time: %f\n", (float)(end - start) / CLOCKS_PER_SEC);
 
 	return 0;
