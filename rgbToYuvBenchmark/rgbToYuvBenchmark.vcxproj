@@ -147,12 +147,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BlockConversion.c" />
+    <ClCompile Include="DCT2.c" />
+    <ClCompile Include="DCT3.c" />
+    <ClCompile Include="FormatConversion.c" />
+    <ClCompile Include="DCT.c" />
     <ClCompile Include="EntropyCoding.c" />
+    <ClCompile Include="ErrorAnalysis.c" />
+    <ClCompile Include="ImageLoadAndSave.c" />
     <ClCompile Include="Main.c" />
+    <ClCompile Include="Quantization.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\dirent.h" />
-    <ClInclude Include="EntropyCoding.h" />
     <ClInclude Include="Main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

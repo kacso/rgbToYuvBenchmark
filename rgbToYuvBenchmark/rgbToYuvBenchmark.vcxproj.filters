@@ -21,6 +21,30 @@
     <ClCompile Include="EntropyCoding.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DCT.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Quantization.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorAnalysis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatConversion.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockConversion.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageLoadAndSave.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DCT2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DCT3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -28,9 +52,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\dirent.h">
       <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EntropyCoding.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
