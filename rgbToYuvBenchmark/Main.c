@@ -1,7 +1,5 @@
 #include "Main.h"
 
-typedef PixelYUV *(*conversionFunction)(PixelRGB *rgbImage, ImageProperties imgProp);
-
 void printSomething(char* title, PixelRGB* out, int x, int y) {
 	int j, k;
 	printf("\n%s\n", title);
@@ -23,109 +21,24 @@ char* concat(char *s1, char *s2)
 	return result;
 }
 
-//Returns conversion Time
-long TestRGBtoYuvConversionFunction(PixelRGB *rgbImage, ImageProperties imgProp, char* imageFilName, char* conversionFunctionName,  conversionFunction conversionFunc, FILE *outputFile)
+long TestRGBtoYuvConversionFunction(PixelRGB *rgbImage, ImageProperties imgProp, char* imageFilName, char* conversionFunctionName, conversionFunction conversionFunc, FILE *outputFile)
 {
-	fprintf(outputFile, "\nFile: %s \t Conversion Function: %s \n", imageFilName, conversionFunctionName);
+	fprintf(outputFile, "File: %s \t Conversion Function: %s \n", imageFilName, conversionFunctionName);
 	clock_t startTime, endTime, timeDiff;
 	startTime = clock();
-	PixelYUV *yuvImage = conversionFunc(rgbImage, imgProp);	
+	PixelYUV_FP *yuvImage = conversionFunc(rgbImage, imgProp);
 	endTime = clock();
 	timeDiff = endTime - startTime;
 	fprintf(outputFile, "Conversion Duration: %i (ms) \n", (int)timeDiff);
-	fprintf(outputFile, "Analysis: \n");
-	PixelRGB* convertedBack =  yuvToRgb(yuvImage, imgProp);
-	ComparePictures(rgbImage, &imgProp, convertedBack, &imgProp, outputFile);
+	PixelRGB* convertedBack = yuvToRgb(yuvImage, imgProp);
+	ComparePictures(rgbImage, imgProp, convertedBack, imgProp, outputFile);
 	free(yuvImage);
 	free(convertedBack);
 	return timeDiff;
 }
 
-
-void toJPEG(PixelRGB *rgbImage, ImageProperties imgProp, FILE *outputFile) {
-
-	clock_t startTime, endTime, timeDiff;
-	PixelYUV *yuvImage = shiftRgbToYuv(rgbImage, imgProp);
-	PixelRGB* YUV_to_RGB = yuvToRgb(yuvImage, imgProp);
-	fprintf(outputFile, "Comparison: Original RGB -> YUV ->RGB2 \n");
-	ComparePictures(rgbImage, &imgProp, YUV_to_RGB, &imgProp, outputFile);
-
-	block_struct* blocks = convert_pixel_array_to_blocks(yuvImage, &imgProp);
-
-	//DCT
-	startTime = clock();
-	block_struct* dctImg = dct_1(blocks);
-	endTime = clock();
-	timeDiff = endTime - startTime;
-	fprintf(outputFile, "\nDCT conversion duration: %i (ms) \n", (int)timeDiff);
-	
-	//IDCT
-	startTime = clock();
-	block_struct* idctImg = idct_1(dctImg);
-	endTime = clock();
-	timeDiff = endTime - startTime;
-	fprintf(outputFile, "IDCT conversion duration: %i (ms) \n", (int)timeDiff);
-
-	PixelYUV* backFromBlocks = convert_block_to_pixel_array(idctImg);
-	PixelRGB* rgbFromIdct = yuvToRgb(yuvImage, imgProp);
-
-	fprintf(outputFile, "\nComparison: YUV converted with IDCT \n");
-	ComparePictures(yuvImage, &imgProp, rgbFromIdct, &imgProp, outputFile);
-
-	fprintf(outputFile, "\nComparison: Original -> DCT -> IDCT -> RGB \n");
-	ComparePictures(rgbImage, &imgProp, rgbFromIdct, &imgProp, outputFile);
-
-
-	//DCT2
-	startTime = clock();
-	block_struct* dct2Img = dct_1(blocks);
-	endTime = clock();
-	timeDiff = endTime - startTime;
-	fprintf(outputFile, "\nDCT2 conversion duration: %i (ms) \n", (int)timeDiff);
-
-	//IDCT (DCT2)
-	block_struct* idct2Img = idct_1(dctImg);
-	PixelYUV* idct2_yuv = convert_block_to_pixel_array(idct2Img);
-	PixelRGB* idct2_rgb = yuvToRgb(idct2_yuv, imgProp);
-
-	fprintf(outputFile, "\nComparison: YUV converted with IDCT (DCT2) \n");
-	ComparePictures(yuvImage, &imgProp, idct2_rgb, &imgProp, outputFile);
-
-	fprintf(outputFile, "\nComparison: Original -> DCT2 -> IDCT  -> RGB \n");
-	ComparePictures(rgbImage, &imgProp, idct2_rgb, &imgProp, outputFile);
-
-	//DCT3
-	startTime = clock();
-	block_struct* dct3Img = dct_1(blocks);
-	endTime = clock();
-	timeDiff = endTime - startTime;
-	fprintf(outputFile, "\nDCT3 conversion duration: %i (ms) \n", (int)timeDiff);
-	// IDCT(DCT2)
-	block_struct* idct3Img = idct_1(dctImg);
-	PixelYUV* idct3_yuv = convert_block_to_pixel_array(idct2Img);
-	PixelRGB* idct3_rgb = yuvToRgb(idct2_yuv, imgProp);
-
-	fprintf(outputFile, "\nComparison: YUV converted with IDCT (DCT3) \n");
-	ComparePictures(yuvImage, &imgProp, idct3_rgb, &imgProp, outputFile);
-
-	fprintf(outputFile, "\nComparison: Original -> DCT3 -> IDCT  -> RGB \n");
-	ComparePictures(rgbImage, &imgProp, idct3_rgb, &imgProp, outputFile);
-
-	free(yuvImage);
-	free(YUV_to_RGB);
-	free(blocks);
-	free(backFromBlocks);
-	free(rgbFromIdct);
-	free(dct2Img);
-	free(idct2Img);
-	free(idct2_yuv);
-	free(idct2_rgb);
-	free(dct3Img);
-	free(idct3Img);
-	free(idct3_yuv);
-	free(idct3_rgb);
-}
-
+#define ANALYSIS_FILE "Results.txt"
+//Returns conversion Time
 /**Input arguments
 ** 1. -> image name
 */
@@ -144,7 +57,7 @@ int main(int argc, char *argv[]) {
 	char* path = NULL;
 
 	FILE *resultOutFile;
-	fopen_s(&resultOutFile, "Results.txt", "w");
+	fopen_s(&resultOutFile, ANALYSIS_FILE, "w");
 
 	/* Get files from dir */
 	DIR *pdir = opendir(imgDir);
@@ -185,11 +98,9 @@ int main(int argc, char *argv[]) {
 		ImageProperties imgProp = readImageProperties(imgFile);
 		PixelRGB *originalImage = loadRGBImage(imgFile, imgProp);
 		fclose(imgFile);
+			
 
-		char *outputFileName = concat("out\\original_", pent->d_name);
-		saveImgAsppm(outputFileName, originalImage, imgProp);
-		free(outputFileName);
-		
+		//TestDCTFunctions(originalImage, imgProp, resultOutFile);
 
 		/**Convert from RGB to yuv */
 		/* Standard */
@@ -202,7 +113,6 @@ int main(int argc, char *argv[]) {
 		// ippTime += TestRGBtoYuvConversionFunction(originalImage, imgProp, concat("out\\ippRgb_", pent->d_name), &ippRgbToYuv);
 
 		/*DCT*/
-		toJPEG(originalImage, imgProp, resultOutFile);
 
 		/* Free allocated space */
 		free(originalImage);

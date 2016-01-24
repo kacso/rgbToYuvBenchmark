@@ -76,7 +76,7 @@ void saveHeaderOfppm(char* fileName, ImageProperties imgProp)
 void saveImgAsppm(char* fileName, PixelRGB *blocks, ImageProperties imgProp)
 {
 	//struct rgbPixel *readedLine = malloc(rowWidth * sizeof(struct rgbPixel));
-	unsigned i, j;
+	//unsigned i, j;
 	FILE *output;
 
 	/**Open an output file*/

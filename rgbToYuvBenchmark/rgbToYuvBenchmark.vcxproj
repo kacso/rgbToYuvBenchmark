@@ -157,6 +157,8 @@
     <ClCompile Include="ImageLoadAndSave.c" />
     <ClCompile Include="Main.c" />
     <ClCompile Include="Quantization.c" />
+    <ClCompile Include="TestConversionFunctions.cpp" />
+    <ClCompile Include="TestDCT.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\dirent.h" />

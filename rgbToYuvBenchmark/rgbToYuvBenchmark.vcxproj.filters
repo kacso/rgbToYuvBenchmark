@@ -45,6 +45,12 @@
     <ClCompile Include="DCT3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestDCT.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestConversionFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">

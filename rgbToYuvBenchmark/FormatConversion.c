@@ -2,8 +2,8 @@
 
 /**Converts from rgb to yuv
 Values are returned through variables Y, Cb and Cr */
-PixelYUV * standardRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
-	PixelYUV *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV));
+PixelYUV_FP * standardRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
+	PixelYUV_FP *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV_FP));
 	for (uint32_t index = 0; index < imgProp.Height * imgProp.Width; index++) {
 			yuvImage[index].Y = 
 				0.257f * rgbImage[index].R +
@@ -21,8 +21,8 @@ PixelYUV * standardRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
 	return yuvImage;
 }
 
-PixelYUV * shiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
-	PixelYUV *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV));
+PixelYUV_FP * shiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
+	PixelYUV_FP *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV_FP));
 
 	for (uint32_t index = 0; index < imgProp.Height * imgProp.Width; index++) {
 			yuvImage[index].Y = ((66 * rgbImage[index].R +
@@ -35,8 +35,8 @@ PixelYUV * shiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
 	return yuvImage;
 }
 
-PixelYUV * optimizedShiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
-	PixelYUV *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV));
+PixelYUV_FP * optimizedShiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
+	PixelYUV_FP *yuvImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelYUV_FP));
 	for (uint32_t index = 0; index < imgProp.Height * imgProp.Width; index++) {
 			yuvImage[index].Y = ((66 * rgbImage[index].R +
 				4 * 32 * rgbImage[index].G + 25 * rgbImage[index].B + 128) >> 8) + 16;
@@ -58,7 +58,7 @@ PixelYUV * optimizedShiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp) {
 //}
 
 /** Converts from yuv to rgb */
-PixelRGB* yuvToRgb(PixelYUV *yuvImage, ImageProperties imgProp) {
+PixelRGB* yuvToRgb(PixelYUV_FP *yuvImage, ImageProperties imgProp) {
 	PixelRGB *rgbImage = malloc(imgProp.Height * imgProp.Width * sizeof(PixelRGB));
 
 	for (uint32_t index = 0; index < imgProp.Height * imgProp.Width; index++) {

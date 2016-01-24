@@ -12,26 +12,26 @@ void translateValuesOfBlock(BlockRow rowOfBlocks, int numOfBlocks, int correctio
 
 void dct1_block(Image_block oldBlock, Image_block newBlock)
 {
-	double Cu, Cv;
+	float Cu, Cv;
 	for (uint8_t u = 0; u < DCT_BLOCK_DIM; u++)
 	{
 		for (uint8_t v = 0; v < DCT_BLOCK_DIM; v++)
 		{
-			if (u == 0) Cu = 1.0 / sqrt(2.0); else Cu = 1.0;
-			if (v == 0) Cv = 1.0 / sqrt(2.0); else Cv = 1.0;
+			if (u == 0) Cu = 1.0f / sqrt(2.0); else Cu = 1.0f;
+			if (v == 0) Cv = 1.0f / sqrt(2.0); else Cv = 1.0f;
 
-			double z = 0;
+			float z = 0;
 
 			for (int y = 0; y < DCT_BLOCK_DIM; y++)
 			{
 				for (int x = 0; x < DCT_BLOCK_DIM; x++)
 				{
 					z += oldBlock[x*DCT_BLOCK_DIM + y] *
-						cos((double)(2 * x + 1) * (double)u * PI / 16.0) *
-						cos((double)(2 * y + 1) * (double)v * PI / 16.0);
+						cos((float)(2 * x + 1) * (float)u * PI / 16.0) *
+						cos((float)(2 * y + 1) * (float)v * PI / 16.0);
 				}
 			}
-			newBlock[v * DCT_BLOCK_DIM + u] = 0.25 * Cu * Cv * z;
+			newBlock[v * DCT_BLOCK_DIM + u] = 0.25f * Cu * Cv * z;
 		}
 	}
 }
@@ -47,15 +47,17 @@ block_struct* dct_generic(block_struct* blocks, transform_block block_transform_
 	newBlocks->numberOfRows = blocks->numberOfRows;
 
 	translateValuesOfBlock(blocks->U_blocks, blocks->numberOfBlocks, -128);
+	for (size_t bl_num = 0; bl_num < blocks->numberOfBlocks; bl_num++)	
+		block_transform_func(blocks->U_blocks[bl_num], newBlocks->U_blocks[bl_num]);
+
 	translateValuesOfBlock(blocks->V_blocks, blocks->numberOfBlocks, -128);
-	translateValuesOfBlock(blocks->Y_blocks, blocks->numberOfBlocks, -128);
+	for (size_t bl_num = 0; bl_num < blocks->numberOfBlocks; bl_num++)
+		block_transform_func(blocks->V_blocks[bl_num], newBlocks->V_blocks[bl_num]);
 
 	for (size_t bl_num = 0; bl_num < blocks->numberOfBlocks; bl_num++)
-	{
-		block_transform_func(blocks->U_blocks[bl_num], newBlocks->U_blocks[bl_num]);
-		block_transform_func(blocks->V_blocks[bl_num], newBlocks->V_blocks[bl_num]);
 		block_transform_func(blocks->Y_blocks[bl_num], newBlocks->Y_blocks[bl_num]);
-	}
+	translateValuesOfBlock(blocks->Y_blocks, blocks->numberOfBlocks, -128);
+
 	return newBlocks;
 }
 
@@ -66,27 +68,27 @@ block_struct* dct_1(block_struct* blocks)
 
 void idct1_block(Image_block oldBlock, Image_block newBlock)
 {
-	double Cu, Cv;
+	float Cu, Cv;
 
 	for (int y = 0; y < DCT_BLOCK_DIM; y++)
 	{
 		for (int x = 0; x < DCT_BLOCK_DIM; x++)
 		{
-			double z = 0;
+			float z = 0;
 			for (uint8_t u = 0; u < DCT_BLOCK_DIM; u++)
 			{
 				for (uint8_t v = 0; v < DCT_BLOCK_DIM; v++)
 				{
-					if (u == 0) Cu = 1.0 / sqrt(2.0); else Cu = 1.0;
-					if (v == 0) Cv = 1.0 / sqrt(2.0); else Cv = 1.0;										
+					if (u == 0) Cu = 1.0f / sqrt(2.0); else Cu = 1.0f;
+					if (v == 0) Cv = 1.0f / sqrt(2.0); else Cv = 1.0f;										
 
 					z += Cu * Cv * oldBlock[v*DCT_BLOCK_DIM + u] *
-						cos((double)(2 * x + 1) * (double)u * PI / 16.0) *
-						cos((double)(2 * y + 1) * (double)v * PI / 16.0);
+						cos((float)(2 * x + 1) * (float)u * PI / 16.0) *
+						cos((float)(2 * y + 1) * (float)v * PI / 16.0);
 				}
 			}
-			z /= 4.0;
-			if (z > 255.0) z = 255.0;
+			z /= 4.0f;
+			if (z > 255.0) z = 255.0f;
 			if (z < 0) z = 0.0;
 			newBlock[x * DCT_BLOCK_DIM + y] = z;
 		}

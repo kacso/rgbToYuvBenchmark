@@ -285,3 +285,4 @@ rgbToYuvBenchmark.opensdf
 x64/Debug/ErrorAnalysis.exe
 rgbToYuvBenchmark/out/ErrorAnalysis.exe
 x64/Debug/rgbToYuvBenchmark.exe
+rgbToYuvBenchmark/Results.txt

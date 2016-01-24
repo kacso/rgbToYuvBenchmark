@@ -37,7 +37,7 @@ typedef struct
 	float Y;
 	float U;
 	float V;
-} PixelYUV_F;
+} PixelYUV_FP;
 
 typedef struct
 {
@@ -48,7 +48,7 @@ typedef struct
 } ImageProperties;
 
 
-typedef uint8_t Image_block[DCT_BLOCK_SIZE];
+typedef float Image_block[DCT_BLOCK_SIZE];
 typedef Image_block* BlockRow;
 
 typedef struct {
@@ -64,24 +64,30 @@ typedef struct {
 #define MEMZERO(target)	memset((target), 0,(sizeof(target)))
 #define ERREXIT(msg) { perror(msg); exit(EXIT_FAILURE); }
 
+//Internal
+typedef PixelYUV_FP* (*conversionFunction(PixelRGB *rgbImage, ImageProperties imgProp));
+typedef void (*transform_block(Image_block oldBlock, Image_block newblock));
+void translateValuesOfBlock(BlockRow rowOfBlocks, int numOfBlocks, int correction);
+block_struct* dct_generic(block_struct* blocks, transform_block block_transform_func);
+
 //Loading & Saving
 ImageProperties readImageProperties(FILE *imgFile);
-PixelRGB *loadRGBImage(FILE *imgFile, ImageProperties imgProp);
+PixelRGB* loadRGBImage(FILE *imgFile, ImageProperties imgProp);
 void saveImgAsppm(char* fileName, PixelRGB *blocks, ImageProperties imgProp);
 
 //Analysis
-void ComparePictures(PixelRGB* img1, ImageProperties* prop_img1, PixelRGB* img2, ImageProperties* prop_img2, FILE* outFile);
+void ComparePictures(PixelRGB* img1, ImageProperties prop_img1, PixelRGB* img2, ImageProperties prop_img2, FILE* analysisResultsFile);
 
 //Format Conversion
-PixelYUV * standardRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp);
-PixelYUV * shiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp);
-PixelYUV * optimizedShiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp);
+PixelYUV_FP* standardRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp);
+PixelYUV_FP* shiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp); 
+PixelYUV_FP* optimizedShiftRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp); 
 //PixelYUV * ippRgbToYuv(PixelRGB *rgbImage, ImageProperties imgProp);
-PixelRGB* yuvToRgb(PixelYUV *yuvImage, ImageProperties imgProp);
+PixelRGB* yuvToRgb(PixelYUV_FP *yuvImage, ImageProperties imgProp);
 
 //Structure Conversion
-block_struct* convert_pixel_array_to_blocks(PixelYUV *yuvImg, ImageProperties *imgProp);
-PixelYUV* convert_block_to_pixel_array(block_struct *blocks);
+block_struct* convert_pixel_array_to_blocks(PixelYUV_FP *yuvImg, ImageProperties imgProp);
+PixelYUV_FP* convert_block_to_pixel_array(block_struct *blocks);
 
 //DCT
 block_struct* dct_1(block_struct* blocks);
@@ -97,7 +103,8 @@ block_struct* quantization(block_struct* blocks);
 //Entropy Coding
 void encode_picture(block_struct *imageBlocks, ImageProperties *imgProp, FILE *outFile);
 
-//Internal
-typedef void *(*transform_block)(Image_block oldBlock, Image_block newblock);
-void translateValuesOfBlock(BlockRow rowOfBlocks, int numOfBlocks, int correction);
+//Analysis
+void TestDCTFunctions(PixelRGB *orgImage, ImageProperties imgProp, FILE *analysisResultsFile);
+//long TestRGBtoYuvConversionFunction(PixelRGB *rgbImage, ImageProperties imgProp, char* imageFilName, char* conversionFunctionName, conversionFunction conversionFunc, FILE *outputFile);
+
 #endif

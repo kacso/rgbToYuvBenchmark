@@ -1,9 +1,9 @@
 #include "main.h"
 
-block_struct* convert_pixel_array_to_blocks(PixelYUV *yuvImg, ImageProperties *imgProp)
+block_struct* convert_pixel_array_to_blocks(PixelYUV_FP *yuvImg, ImageProperties imgProp)
 {
-	int block_rows = imgProp->Height / DCT_BLOCK_DIM;
-	int block_columns = imgProp->Width / DCT_BLOCK_DIM;
+	int block_rows = imgProp.Height / DCT_BLOCK_DIM;
+	int block_columns = imgProp.Width / DCT_BLOCK_DIM;
 	int num_of_blocks = block_rows * block_columns;
 	block_struct *blocks = malloc(sizeof(block_struct));
 	blocks->numberOfBlocks = num_of_blocks;
@@ -24,7 +24,7 @@ block_struct* convert_pixel_array_to_blocks(PixelYUV *yuvImg, ImageProperties *i
 				for (int j = 0; j < DCT_BLOCK_DIM; j++)
 				{
 					int col = col_offset + j;
-					int index = br*imgProp->Width + col;
+					int index = br*imgProp.Width + col;
 					blocks->U_blocks[current_block_num][blockIndex] = yuvImg[index].U;
 					blocks->V_blocks[current_block_num][blockIndex] = yuvImg[index].V;
 					blocks->Y_blocks[current_block_num][blockIndex] = yuvImg[index].Y;
@@ -36,9 +36,9 @@ block_struct* convert_pixel_array_to_blocks(PixelYUV *yuvImg, ImageProperties *i
 	return blocks;
 }
 
-PixelYUV* convert_block_to_pixel_array(block_struct *blocks)
+PixelYUV_FP* convert_block_to_pixel_array(block_struct *blocks)
 {
-	PixelYUV *yuvImage = malloc(blocks->numberOfBlocks * DCT_BLOCK_SIZE * sizeof(PixelYUV));
+	PixelYUV_FP *yuvImage = malloc(blocks->numberOfBlocks * DCT_BLOCK_SIZE * sizeof(PixelYUV_FP));
 	for (int bl_num = 0; bl_num < blocks->numberOfBlocks; bl_num++)
 	{
 		int col_offset = (bl_num % blocks->numberOfColumns)*DCT_BLOCK_DIM;

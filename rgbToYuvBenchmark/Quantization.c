@@ -31,17 +31,15 @@ block_struct* quantization(block_struct* blocks)
 	newBlocks->numberOfRows = blocks->numberOfRows;
 	for (size_t bl_num = 0; bl_num < blocks->numberOfBlocks; bl_num++)
 	{
-		for (int i = 0; i < DCT_BLOCK_SIZE; i++)
-		{
+		for (int i = 0; i < DCT_BLOCK_SIZE; i++)		
 			newBlocks->Y_blocks[bl_num][i] = blocks->Y_blocks[bl_num][i] / k1_table[i];
-		}
-		for (int i = 0; i < DCT_BLOCK_SIZE; i++)
-		{
+		
+		for (int i = 0; i < DCT_BLOCK_SIZE; i++)		
 			newBlocks->V_blocks[bl_num][i] = blocks->V_blocks[bl_num][i] / k2_table[i];
-		}
-		for (int i = 0; i < DCT_BLOCK_SIZE; i++)
-		{
+		
+		for (int i = 0; i < DCT_BLOCK_SIZE; i++)		
 			newBlocks->U_blocks[bl_num][i] = blocks->U_blocks[bl_num][i] / k2_table[i];
-		}
-		return newBlocks;
+		
 	}
+	return newBlocks;
+}

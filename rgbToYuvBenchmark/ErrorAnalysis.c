@@ -1,8 +1,8 @@
 #include "Main.h"
 
-void ComparePictures(PixelRGB* img1, ImageProperties* prop_img1, PixelRGB* img2, ImageProperties* prop_img2, FILE* outFile)
+void ComparePictures(PixelRGB* img1, ImageProperties prop_img1, PixelRGB* img2, ImageProperties prop_img2, FILE* outFile)
 {
-	unsigned int numberOfPixels = prop_img1->Height * prop_img1->Width;
+	unsigned int numberOfPixels = prop_img1.Height * prop_img1.Width;
 	unsigned diffR, diffG, diffB, diffTotal, maxDiff = 0;
 	unsigned int squaredError = 0;
 	int differenceCount[256 * 2 * 3]; // [pixel difference]
@@ -19,7 +19,7 @@ void ComparePictures(PixelRGB* img1, ImageProperties* prop_img1, PixelRGB* img2,
 		if (diffTotal > maxDiff) maxDiff = diffTotal;
 	}
 	double meanSquaredError = (squaredError / numberOfPixels);
-	fprintf(outFile, "Mean squared error: %.2f \n", meanSquaredError);
+	fprintf(outFile, "Analysis: Mean squared error: %.2f \n\n", meanSquaredError);
 
 	/*fprintf(outFile, "PixelDifference\t  \tNumberOfPixels \t(percent) \n");
 	for (unsigned i = 0; i <= maxDiff; i++)
